@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% block title %}SkillSwap{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css" rel="stylesheet" />
+    <link href="{{ url_for('static', filename='css/main.css') }}" rel="stylesheet" />
+</head>
+
+<body>
+
+    <nav class="ss-nav">
+        <!--logo-->
+        <a href="{{url_for('auth.home')}}" class="ss-nav-brand"><img src="/static/images/logo.png" alt="logo"></a>
+        <!--nav links-->
+        <div class="ss-nav-links">
+            <a href="{{url_for('auth.home')}}">Dashboard</a>
+            <a href="{{url_for('auth.home')}}">Browse Skill</a>
+            <a href="{{url_for('auth.home')}}">My Skills</a>
+            <a href="{{url_for('auth.home')}}">Requests</a>
+            <a href="{{url_for('auth.home')}}">Chats</a>
+        </div>
+
+
+        <div class="ss-nav-actions">
+            {% if current_user.is_authenticated %}
+            {{ current_user.full_name.split()[0] }}
+            <a href="{{ url_for('auth.logout') }}" class="btn-ss btn-ss-outline btn-ss-sm">Log out</a>
+            {% else %}
+            <a href="{{ url_for('auth.login') }}" class="btn-ss btn-ss-outline">Log In</a>
+            <a href="{{ url_for('auth.register') }}" class="btn-ss btn-ss-primary">Sign Up</a>
+            {% endif %}
+        </div>
+
+
+    </nav>
+
+
+    <div class="flash-container" style="position:fixed ;width:100% ; padding:0 32px;margin-top:12px;">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="ss-alert ss-alert-{{ 'danger' if category == 'danger' else 'success' if category == 'success' else 'info' if category == 'info' else 'warning' }}"
+            id="flash-{{ loop.index }}">
+            <i
+                class="ti ti-{{ 'alert-circle' if category == 'danger' else 'circle-check' if category == 'success' else 'info-circle' }}"></i>
+            {{ message }}
+        </div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+    </div>
+
+
+    {% block content %}{% endblock %}
+
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block scripts %}{% endblock %}
+</body>
+
+</html>

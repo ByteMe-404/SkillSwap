@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sign in — SkillSwap</title>
+  <link href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css" rel="stylesheet" />
+  <link href="{{ url_for('static', filename='css/main.css') }}" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/css/main.css">
+  <style>
+    body {
+      margin: 0;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      min-height: 100vh;
+    }
+
+    .login-left {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 60px;
+    }
+
+    .login-right {
+      background-image: url(/static/images/container.png);
+      background-size: cover;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    @media(max-width:768px) {
+      body {
+        grid-template-columns: 1fr;
+      }
+
+      .login-right {
+        display: none;
+      }
+    }
+
+
+
+    
+  </style>
+</head>
+
+<body>
+  <div class="login-left">
+    <a href="{{ url_for('auth.home') }}" class="ss-nav-brand">
+      <img src="/static/images/logo.png" alt="">
+    </a>
+    <h1 style="font-size:32px;font-weight:800;margin:0 0 8px;">Sign in</h1>
+    <p style="color:var(--text-mid);margin:0 0 32px;">Please login to continue to your account.</p>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}{% for c,m in messages %}
+    <div class="ss-alert ss-alert-{{ 'danger' if c=='danger' else 'success' if c=='success' else 'info' }}"
+      style="margin-bottom:16px;">{{ m }}</div>
+    {% endfor %}{% endif %}
+    {% endwith %}
+
+    <form method="POST">
+      <div class="ss-input-group">
+        <label class="ss-label">Email</label>
+        <input type="email" name="email" class="ss-input" placeholder="your@email.com" required autofocus />
+      </div>
+      <div class="ss-input-group">
+        <label class="ss-label">Password</label>
+        <div style="position:relative;">
+          <input type="password" name="password" id="pw-input" class="ss-input" placeholder="Password" required
+            style="padding-right:42px;" />
+          <button type="button" onclick="togglePw()"
+            style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text-light);cursor:pointer;padding:0;">
+            <i class="ti ti-eye-off" id="pw-icon" style="font-size:18px;"></i>
+          </button>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:24px;">
+        <input type="checkbox" name="remember" id="remember"
+          style="width:16px;height:16px;accent-color:var(--primary);" />
+        <label for="remember" style="font-size:14px;color:var(--text-mid);">Keep me logged in</label>
+      </div>
+      <button type="submit" class="btn-ss btn-ss-primary btn-ss-block" style="padding:12px;font-size:15px;">Sign
+        in</button>
+    </form>
+
+    <p style="text-align:center;margin-top:24px;font-size:14px;color:var(--text-mid);">
+      Need an account? <a href="{{ url_for('auth.register') }}"
+        style="color:var(--primary);font-weight:600;text-decoration:none;">Create one</a>
+    </p>
+  </div>
+
+  <div class="login-right">
+    <div class="login-right-inner">
+    </div>
+  </div>
+
+  <script>
+    function togglePw() {
+      const inp = document.getElementById('pw-input');
+      const ico = document.getElementById('pw-icon');
+      if (inp.type === 'password') { inp.type = 'text'; ico.className = 'ti ti-eye'; }
+      else { inp.type = 'password'; ico.className = 'ti ti-eye-off'; }
+    }
+  </script>
+</body>
+
+</html>
