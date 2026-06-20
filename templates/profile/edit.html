@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+{% block title %}Edit Profile — SkillSwap{% endblock %}
+{% block content %}
+<div class="ss-page">
+  <a href="{{ url_for('profile.view', user_id=current_user.id) }}" class="ss-back"><i class="ti ti-arrow-left"></i> Back to profile</a>
+  <h1 class="ss-page-title">Edit profile</h1>
+  <p class="ss-page-sub" style="margin-bottom:28px;">Update your personal information and account settings.</p>
+
+  <div style="max-width:680px;">
+  <form method="POST" enctype="multipart/form-data">
+
+    <!-- Profile photo -->
+    <div class="ss-card" style="margin-bottom:16px;">
+      <p class="ss-section-title">PROFILE PHOTO</p>
+      <div style="display:flex;align-items:center;gap:20px;">
+        <div class="ss-avatar ss-avatar-lg">
+          {% if current_user.profile_photo %}
+            <img src="{{ url_for('static', filename='uploads/profile_photos/'+current_user.profile_photo) }}"/>
+          {% else %}{{ current_user.full_name[:2].upper() }}{% endif %}
+        </div>
+        <div>
+          <label class="btn-ss btn-ss-outline btn-ss-sm" style="cursor:pointer;">
+            <i class="ti ti-upload"></i> Upload photo
+            <input type="file" name="profile_photo" accept=".jpg,.jpeg,.png" style="display:none;" onchange="previewPhoto(this)"/>
+          </label>
+          <p class="ss-form-hint" style="margin-top:6px;">JPG or PNG, max 2MB</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Personal info -->
+    <div class="ss-card" style="margin-bottom:16px;">
+      <p class="ss-section-title">PERSONAL INFORMATION</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div class="ss-input-group">
+          <label class="ss-label">Full name *</label>
+          <input type="text" name="full_name" class="ss-input" value="{{ current_user.full_name }}" required/>
+        </div>
+        <div class="ss-input-group">
+          <label class="ss-label">Email</label>
+          <input type="email" class="ss-input" value="{{ current_user.email }}" disabled style="opacity:.6;cursor:not-allowed;"/>
+          <p class="ss-form-hint">Email cannot be changed.</p>
+        </div>
+        <div class="ss-input-group">
+          <label class="ss-label">University *</label>
+          <select name="university" class="ss-select" required>
+            {% for u in ['BRAC University','North South University','BUET','Dhaka University','Shanto-Mariam University of Creative Technology','Independent University Bangladesh','East West University','Other'] %}
+            <option {% if current_user.university == u %}selected{% endif %}>{{ u }}</option>
+            {% endfor %}
+            <option {% if current_user.university not in ['BRAC University','North South University','BUET','Dhaka University','Independent University Bangladesh','East West University','Other'] %}selected{% endif %} value="{{ current_user.university }}">{{ current_user.university }}</option>
+          </select>
+        </div>
+        <div class="ss-input-group">
+          <label class="ss-label">Department *</label>
+          <input type="text" name="department" class="ss-input" value="{{ current_user.department }}" required/>
+        </div>
+        <div class="ss-input-group" style="margin-bottom:0;">
+          <label class="ss-label">Year of study *</label>
+          <select name="year_of_study" class="ss-select" required>
+            {% for y in range(1,7) %}
+            <option value="{{ y }}" {% if current_user.year_of_study == y %}selected{% endif %}>Year {{ y }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+      <div class="ss-input-group" style="margin-top:16px;margin-bottom:0;">
+        <label class="ss-label">Bio <span style="color:var(--text-light);font-weight:400;">(optional)</span></label>
+        <textarea name="bio" class="ss-textarea" rows="3" placeholder="Tell students about yourself and your experience...">{{ current_user.bio or '' }}</textarea>
+      </div>
+    </div>
+
+    <!-- Change password -->
+    <div class="ss-card" style="margin-bottom:16px;">
+      <p class="ss-section-title">CHANGE PASSWORD</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div class="ss-input-group" style="grid-column:1/-1;">
+          <label class="ss-label">Current password</label>
+          <input type="password" name="current_password" class="ss-input" placeholder="Leave blank to keep current password"/>
+        </div>
+        <div class="ss-input-group">
+          <label class="ss-label">New password</label>
+          <input type="password" name="new_password" class="ss-input" placeholder="••••••••"/>
+        </div>
+        <div class="ss-input-group">
+          <label class="ss-label">Confirm new password</label>
+          <input type="password" name="confirm_new_password" class="ss-input" placeholder="••••••••"/>
+        </div>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-bottom:24px;">
+      <a href="{{ url_for('profile.view', user_id=current_user.id) }}" class="btn-ss btn-ss-outline">Cancel</a>
+      <button type="submit" class="btn-ss btn-ss-primary"><i class="ti ti-check"></i> Save changes</button>
+    </div>
+  </form>
+
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+function previewPhoto(input){
+  if(input.files && input.files[0]){
+    const reader=new FileReader();
+    reader.onload=function(e){
+      const av=document.querySelector('.ss-avatar.ss-avatar-lg');
+      av.innerHTML=`<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"/>`;
+    };
+    reader.readAsDataURL(input.files[0]);
+  }
+}
+</script>
+{% endblock %}

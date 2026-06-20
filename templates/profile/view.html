@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+{% block title %}{{ user.full_name }} — SkillSwap{% endblock %}
+{% block content %}
+<div class="ss-page">
+    <div style="display:grid;grid-template-columns:260px 1fr;gap:24px;align-items:start;">
+
+        <div class="profile-sidebar">
+            {% if user.profile_photo %}
+            <img src="{{ url_for('static', filename='uploads/profile_photos/'+user.profile_photo) }}"
+                style="width:80px;height:80px;border-radius:50%;object-fit:cover;margin:0 auto 16px;display:block;" />
+            {% else %}
+            <div class="ss-avatar ss-avatar-xl" style="margin:0 auto 16px;">{{ user.full_name[:2].upper() }}</div>
+            {% endif %}
+            <h2 style="font-size:18px;font-weight:700;margin:0 0 4px;word-break:break-word;">{{ user.full_name }}</h2>
+            <p style="color:var(--text-mid);font-size:13px;margin:0 0 4px;">{{ user.department }} · Year {{
+                user.year_of_study }}</p>
+            <p style="color:var(--text-light);font-size:13px;margin:0 0 16px;word-break:break-word;">{{ user.email }}
+            </p>
+            {% if user.bio %}
+            <p
+                style="font-size:13px;color:var(--text-mid);line-height:1.6;margin:0 0 16px;text-align:left;padding-top:14px;border-top:1px solid var(--border);word-break:break-word;">
+                {{ user.bio }}</p>
+            {% endif %}
+            {% if current_user.is_authenticated and current_user.id == user.id %}
+            <a href="{{ url_for('profile.edit') }}" class="btn-ss btn-ss-outline btn-ss-block btn-ss-sm"
+                style="margin-bottom:16px;">
+                <i class="ti ti-edit"></i> Edit profile
+            </a>
+            {% endif %}
+
+        </div>
+    </div>
+</div>
+{% endblock %}

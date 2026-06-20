@@ -16,7 +16,7 @@
         <a href="{{url_for('auth.home')}}" class="ss-nav-brand"><img src="/static/images/logo.png" alt="logo"></a>
         <!--nav links-->
         <div class="ss-nav-links">
-            <a href="{{url_for('auth.home')}}">Dashboard</a>
+            <a href="{{url_for('dashboard.index')}}">Dashboard</a>
             <a href="{{url_for('auth.home')}}">Browse Skill</a>
             <a href="{{url_for('auth.home')}}">My Skills</a>
             <a href="{{url_for('auth.home')}}">Requests</a>
@@ -26,7 +26,19 @@
 
         <div class="ss-nav-actions">
             {% if current_user.is_authenticated %}
-            {{ current_user.full_name.split()[0] }}
+            <a href="{{ url_for('profile.view', user_id=current_user.id) }}"
+                style="display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--text-dark);font-weight:500;font-size:14px;">
+                <span class="ss-avatar ss-avatar-sm">
+                    {% if current_user.profile_photo %}
+                    <img
+                        src="{{ url_for('static', filename='uploads/profile_photos/' + current_user.profile_photo) }}" />
+                    {% else %}
+                    {{ current_user.full_name[:2].upper() }}
+                    {% endif %}
+                </span>
+                {{ current_user.full_name.split()[0] }}
+            </a>
+
             <a href="{{ url_for('auth.logout') }}" class="btn-ss btn-ss-outline btn-ss-sm">Log out</a>
             {% else %}
             <a href="{{ url_for('auth.login') }}" class="btn-ss btn-ss-outline">Log In</a>
