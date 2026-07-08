@@ -52,6 +52,7 @@ def register():
         return redirect(url_for('dashboard.home'))
     return render_template('auth/register.html')
 
+
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:

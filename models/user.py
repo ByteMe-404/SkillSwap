@@ -20,6 +20,12 @@ class User(UserMixin, db.Model):
     created_at    = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at    = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
+    
+    skills             = db.relationship('Skill',   backref='owner',     lazy='dynamic', foreign_keys='Skill.user_id')
+    sent_requests      = db.relationship('Request', backref='requester', lazy='dynamic', foreign_keys='Request.requester_id')
+    received_requests  = db.relationship('Request', backref='teacher',   lazy='dynamic', foreign_keys='Request.teacher_id')
+    reviews_given      = db.relationship('Review',  backref='reviewer',  lazy='dynamic', foreign_keys='Review.reviewer_id')
+    reviews_received   = db.relationship('Review',  backref='reviewee',  lazy='dynamic', foreign_keys='Review.reviewee_id')
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)

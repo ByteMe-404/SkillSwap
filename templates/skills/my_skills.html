@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+{% block title %}My Skills — SkillSwap{% endblock %}
+{% block content %}
+<div class="ss-page">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px;">
+    <div>
+      <h1 class="ss-page-title">My skills</h1>
+      <p class="ss-page-sub">Manage the skills you offer to other students.</p>
+    </div>
+    <a href="#" class="btn-ss btn-ss-primary"><i class="ti ti-plus"></i> Add skill</a>
+  </div>
+
+  <div class="stats-row-4">
+    <div class="ss-stat">
+      <p class="ss-stat-num">{{ skills|length }}</p>
+      <p class="ss-stat-label">Skill Listed</p>
+      <p class="ss-stat-sub">{{ skills|selectattr('status','eq','active')|list|length }} active · {{ skills|selectattr('status','eq','draft')|list|length }} draft</p>
+    </div>
+    <div class="ss-stat">
+      <p class="ss-stat-num">{{ current_user.received_requests.count() }}</p>
+      <p class="ss-stat-label">Requests received</p>
+      <p class="ss-stat-sub">{{ current_user.received_requests.filter_by(status='pending').count() }} pending</p>
+    </div>
+    <div class="ss-stat">
+      <p class="ss-stat-num">{{ current_user.received_requests.filter_by(status='accepted').count() }}</p>
+      <p class="ss-stat-label">Sessions completed</p>
+    </div>
+    <div class="ss-stat">
+      <p class="ss-stat-num">{{ current_user.avg_rating() or '—' }}</p>
+      <p class="ss-stat-label">Avg rating</p>
+      <p class="ss-stat-sub">From {{ current_user.reviews_received.count() }} reviews</p>
+    </div>
+  </div>
+
+  <!-- {% if current_user.received_requests.filter_by(status='pending').count() > 0 %}
+  <div class="ss-alert ss-alert-info" style="justify-content:space-between;margin-bottom:20px;">
+    <span><i class="ti ti-bell"></i> You have <strong>{{ current_user.received_requests.filter_by(status='pending').count() }} pending requests</strong> waiting.</span>
+    <a href="{{ url_for('requests.received', status='pending') }}" class="btn-ss btn-ss-primary btn-ss-sm">View Requests</a>
+  </div>
+  {% endif %} -->
+
+  <div style="display:flex;gap:10px;margin-bottom:24px;">
+    <div class="ss-search" style="flex:1;">
+      <i class="ti ti-search" style="padding:0 10px;color:var(--text-light);"></i>
+      <input type="text" placeholder="Search skills..." id="skill-search" oninput="filterSkills()"/>
+    </div>
+    <select class="ss-select" style="width:180px;" id="cat-filter" onchange="filterSkills()">
+      <option value="">All categories</option>
+      {% for cat in categories %}<option value="{{ cat.name }}">{{ cat.name }}</option>{% endfor %}
+    </select>
+    <select class="ss-select" style="width:140px;" id="status-filter" onchange="filterSkills()">
+      <option value="">All Status</option>
+      <option value="active">Active</option>
+      <option value="draft">Draft</option>
+    </select>
+  </div>
+
+  {% if skills %}
+  <div class="my-skills-grid" id="skills-grid">
+    {% for skill in skills %}
+    <div class="skill-card" data-title="{{ skill.title|lower }}" data-cat="{{ skill.category.name }}" data-status="{{ skill.status }}">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-shrink:0;">
+        <span class="ss-avatar ss-avatar-sm" style="flex-shrink:0;">
+          {% if current_user.profile_photo %}<img src="{{ url_for('static', filename='uploads/profile_photos/'+current_user.profile_photo) }}"/>
+          {% else %}{{ current_user.full_name[:2].upper() }}{% endif %}
+        </span>
+        <div style="min-width:0;">
+          <div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ current_user.full_name.split()[0] }} {{ current_user.full_name.split()[-1][0] }}.</div>
+          <div style="font-size:11px;color:var(--text-light);">{{ current_user.department }}, Year {{ current_user.year_of_study }}</div>
+        </div>
+      </div>
+
+      <a href="#" class="skill-card-title" style="text-decoration:none;color:var(--text-dark);font-size:15px;font-weight:600;margin-bottom:6px;">{{ skill.title }}</a>
+      <p class="skill-card-desc" style="font-size:13px;color:var(--text-mid);margin:0 0 10px;">{{ skill.short_desc }}</p>
+
+      <div style="flex-shrink:0;">
+        <span class="ss-badge ss-badge-blue" style="margin-bottom:10px;">{{ skill.category.name }}</span>
+        <div class="skill-card-footer">
+          <div class="ss-rating">
+            <span class="ss-stars">{{ '★'*(skill.avg_rating()|int if skill.avg_rating() else 0) }}{{ '☆'*(5-(skill.avg_rating()|int if skill.avg_rating() else 0)) }}</span>
+            <span class="ss-rating-num">({{ skill.avg_rating() or 'New' }})</span>
+          </div>
+          <span class="ss-badge ss-status-{{ skill.status }}">{{ skill.status.capitalize() }}</span>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);">
+          <a href="#" class="btn-ss btn-ss-outline btn-ss-sm" style="flex:1;justify-content:center;">edit</a>
+          <form method="POST" action="#" onsubmit="return confirm('Delete this skill?')" style="margin:0;flex:1;">
+            <button class="btn-ss btn-ss-danger btn-ss-sm" style="width:100%;justify-content:center;">delete</button>
+          </form>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+
+    <a href="#" class="add-skill-placeholder">
+      <div style="width:48px;height:48px;border-radius:50%;background:var(--bg);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;margin-bottom:10px;">
+        <i class="ti ti-plus" style="font-size:22px;color:var(--text-light);"></i>
+      </div>
+      <p style="color:var(--text-mid);font-size:14px;font-weight:500;margin:0;">Add another skill</p>
+    </a>
+  </div>
+  {% else %}
+  <div class="ss-empty">
+    <div class="ss-empty-icon"><i class="ti ti-tools" style="font-size:28px;color:var(--primary);"></i></div>
+    <h3 class="ss-empty-title">No skills yet</h3>
+    <p class="ss-empty-sub">Add your first skill to start receiving requests from students.</p>
+    <a href="#" class="btn-ss btn-ss-primary">Add a skill</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+function filterSkills(){
+  const q=document.getElementById('skill-search').value.toLowerCase();
+  const cat=document.getElementById('cat-filter').value.toLowerCase();
+  const status=document.getElementById('status-filter').value.toLowerCase();
+  document.querySelectorAll('#skills-grid .skill-card').forEach(card=>{
+    const title=(card.dataset.title||'');
+    const cardCat=(card.dataset.cat||'').toLowerCase();
+    const cardStatus=(card.dataset.status||'').toLowerCase();
+    const show=(!q||title.includes(q))&&(!cat||cardCat===cat)&&(!status||cardStatus===status);
+    card.style.display=show?'':'none';
+  });
+}
+</script>
+{% endblock %}

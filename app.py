@@ -15,20 +15,33 @@ def create_app():
     login_manager.login_message_category = 'warning'
 
     with app.app_context():
-        from models.user import User
-        from routes.auth import auth_bp
-        from routes.dashboard import dashboard_bp
-        from routes.profile     import profile_bp
+        from models.user     import User
+        from models.category import Category
+        from models.skill    import Skill
+        from models.request  import Request
+        from models.chat     import Chat
+        from models.message  import Message
+        from models.review   import Review
+        
+
 
 
 
         @login_manager.user_loader
         def load_user(user_id):
             return User.query.get(int(user_id))
+        
+        from routes.auth        import auth_bp
+        from routes.dashboard   import dashboard_bp
+        from routes.profile     import profile_bp
+        from routes.skills      import skills_bp
+
 
         app.register_blueprint(auth_bp)
         app.register_blueprint(dashboard_bp)
         app.register_blueprint(profile_bp)
+        app.register_blueprint(skills_bp)
+
 
     return app
 
