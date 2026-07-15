@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% block title %}Admin Dashboard — SkillSwap{% endblock %}
+{% block content %}
+<div class="ss-page">
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:28px;">
+    <i class="ti ti-shield" style="font-size:24px;color:#F59E0B;"></i>
+    <h1 class="ss-page-title" style="margin:0;">Admin dashboard</h1>
+  </div>
+
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px;">
+    <div class="ss-stat" style="background:var(--primary);color:#fff;">
+      <p class="ss-stat-num" style="color:#fff;">{{ total_users }}</p>
+      <p class="ss-stat-label" style="color:rgba(255,255,255,.8);">Total users</p>
+    </div>
+    <div class="ss-stat" style="background:#10B981;color:#fff;">
+      <p class="ss-stat-num" style="color:#fff;">{{ total_skills }}</p>
+      <p class="ss-stat-label" style="color:rgba(255,255,255,.8);">Total skills</p>
+    </div>
+    <div class="ss-stat" style="background:#F59E0B;color:#fff;">
+      <p class="ss-stat-num" style="color:#fff;">{{ total_requests }}</p>
+      <p class="ss-stat-label" style="color:rgba(255,255,255,.8);">Total requests</p>
+    </div>
+    <div class="ss-stat" style="background:#6366F1;color:#fff;">
+      <p class="ss-stat-num" style="color:#fff;">{{ total_cats }}</p>
+      <p class="ss-stat-label" style="color:rgba(255,255,255,.8);">Categories</p>
+    </div>
+  </div>
+
+  <div style="display:flex;gap:10px;margin-bottom:24px;">
+    <a href="{{ url_for('admin.categories') }}" class="btn-ss btn-ss-outline btn-ss-sm"><i class="ti ti-tags"></i> Manage categories</a>
+  </div>
+
+  <div class="ss-card">
+    <h3 style="font-size:15px;font-weight:600;margin:0 0 16px;">Recent users</h3>
+    <table class="ss-table">
+      <thead>
+        <tr>
+          <th>Name</th><th>Email</th><th>Department</th><th>Joined</th><th>Status</th><th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for user in recent_users %}
+        <tr>
+          <td style="font-weight:500;">{{ user.full_name }}</td>
+          <td style="color:var(--text-mid);">{{ user.email }}</td>
+          <td style="color:var(--text-mid);">{{ user.department }}</td>
+          <td style="color:var(--text-mid);">{{ user.created_at.strftime('%b %d, %Y') }}</td>
+          <td>
+            <span class="ss-badge {% if user.is_active %}ss-status-accepted{% else %}ss-status-rejected{% endif %}">
+              {% if user.is_active %}Active{% else %}Inactive{% endif %}
+            </span>
+          </td>
+          <td>
+            {% if user.id != current_user.id %}
+            <form method="POST" action="{{ url_for('admin.toggle_user', user_id=user.id) }}" style="margin:0;">
+              <button class="btn-ss btn-ss-sm {% if user.is_active %}btn-ss-danger{% else %}btn-ss-success{% endif %}">
+                {% if user.is_active %}Deactivate{% else %}Activate{% endif %}
+              </button>
+            </form>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
