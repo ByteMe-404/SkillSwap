@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+{% block title %}Edit Skill — SkillSwap{% endblock %}
+{% block content %}
+<div class="ss-page">
+  <a href="{{ url_for('skills.my_skills') }}" class="ss-back"><i class="ti ti-arrow-left"></i> Back to my skills</a>
+  <h1 class="ss-page-title">Edit: {{ skill.title }}</h1>
+  <p class="ss-page-sub" style="margin-bottom:28px;">Update your skill details.</p>
+  <div style="max-width:700px;">
+  <form method="POST">
+    <div class="ss-card" style="margin-bottom:16px;">
+      <p class="ss-section-title">BASIC INFO</p>
+      <div class="ss-input-group"><label class="ss-label">Title *</label>
+        <input type="text" name="title" class="ss-input" value="{{ skill.title }}" required maxlength="80"/></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div class="ss-input-group"><label class="ss-label">Category *</label>
+          <select name="category_id" class="ss-select" required>
+            {% for cat in categories %}<option value="{{ cat.id }}" {% if cat.id==skill.category_id %}selected{% endif %}>{{ cat.name }}</option>{% endfor %}
+          </select></div>
+        <div class="ss-input-group"><label class="ss-label">Level</label>
+          <select name="level" class="ss-select">
+            {% for l in ['Beginner','Intermediate','Advanced'] %}<option {% if skill.level==l %}selected{% endif %}>{{ l }}</option>{% endfor %}
+          </select></div>
+      </div>
+      <div class="ss-input-group"><label class="ss-label">Short description *</label>
+        <textarea name="short_desc" class="ss-textarea" rows="2" required maxlength="160">{{ skill.short_desc }}</textarea></div>
+      <div class="ss-input-group" style="margin-bottom:0;"><label class="ss-label">Full description *</label>
+        <textarea name="description" class="ss-textarea" rows="4" required maxlength="800">{{ skill.description }}</textarea></div>
+    </div>
+
+    <div class="ss-card" style="margin-bottom:16px;">
+      <p class="ss-section-title">TOPICS</p>
+      <div style="display:flex;gap:8px;margin-bottom:10px;">
+        <input type="text" id="topic-input" class="ss-input" placeholder="Add topic..." style="flex:1;" onkeydown="if(event.key==='Enter'){event.preventDefault();addTopic()}"/>
+        <button type="button" class="btn-ss btn-ss-outline" onclick="addTopic()">Add</button>
+      </div>
+      <div class="topic-pill-wrap" id="topics-wrap"></div>
+      <input type="hidden" name="topics" id="topics-hidden" value='{{ skill.topics|tojson }}'/>
+    </div>
+
+    <div class="ss-card" style="margin-bottom:16px;">
+      <p class="ss-section-title">LEARNING OUTCOMES</p>
+      <div id="outcomes-list">
+        {% for o in skill.outcomes %}
+        <div class="outcome-row">
+          <i class="ti ti-circle-check" style="color:var(--success);font-size:16px;flex-shrink:0;"></i>
+          <input type="text" name="outcomes" class="ss-input" value="{{ o }}"/>
+          <button type="button" class="btn-ss btn-ss-ghost btn-ss-sm" onclick="removeOutcome(this)"><i class="ti ti-x"></i></button>
+        </div>
+        {% endfor %}
+        {% if not skill.outcomes %}
+        <div class="outcome-row">
+          <i class="ti ti-circle-check" style="color:var(--success);font-size:16px;flex-shrink:0;"></i>
+          <input type="text" name="outcomes" class="ss-input" placeholder="e.g. Build a model"/>
+          <button type="button" class="btn-ss btn-ss-ghost btn-ss-sm" onclick="removeOutcome(this)"><i class="ti ti-x"></i></button>
+        </div>
+        {% endif %}
+      </div>
+      <button type="button" class="btn-ss btn-ss-ghost btn-ss-sm" onclick="addOutcome()" style="color:var(--primary);padding-left:0;margin-top:4px;"><i class="ti ti-plus"></i> Add outcome</button>
+    </div>
+
+    <div class="ss-card" style="margin-bottom:16px;">
+      <p class="ss-section-title">SESSION DETAILS</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+        <div class="ss-input-group" style="margin-bottom:0;"><label class="ss-label">Duration</label>
+          <select name="session_duration" class="ss-select">
+            {% for d in ['30 minutes','45–60 minutes','90 minutes','Flexible'] %}<option {% if skill.session_duration==d %}selected{% endif %}>{{ d }}</option>{% endfor %}
+          </select></div>
+        <div class="ss-input-group" style="margin-bottom:0;"><label class="ss-label">Format</label>
+          <select name="session_format" class="ss-select">
+            {% for f in ['Online','In person','Both'] %}<option {% if skill.session_format==f %}selected{% endif %}>{{ f }}</option>{% endfor %}
+          </select></div>
+      </div>
+      <label class="ss-label">Availability</label>
+      <div class="avail-wrap" id="avail-wrap">
+        {% for slot in ['Weekday mornings','Weekday afternoons','Weekday evenings','Weekends'] %}
+        <div class="avail-chip {% if slot in skill.availability %}active{% endif %}" onclick="this.classList.toggle('active')" data-val="{{ slot }}">
+          <i class="ti ti-{% if 'morning' in slot %}sun{% elif 'afternoon' in slot %}coffee{% elif 'evening' in slot %}moon{% else %}calendar-week{% endif %}"></i>{{ slot }}
+        </div>
+        {% endfor %}
+      </div>
+      <input type="hidden" name="availability_json" id="avail-hidden"/>
+    </div>
+
+    <div class="ss-card" style="margin-bottom:24px;">
+      <p class="ss-section-title">STATUS</p>
+      <div style="display:flex;gap:12px;">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;">
+          <input type="radio" name="status" value="active" {% if skill.status=='active' %}checked{% endif %} style="accent-color:var(--primary);width:16px;height:16px;"/> Active
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;">
+          <input type="radio" name="status" value="draft" {% if skill.status=='draft' %}checked{% endif %} style="accent-color:var(--primary);width:16px;height:16px;"/> Draft
+        </label>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:10px;justify-content:flex-end;">
+      <a href="{{ url_for('skills.my_skills') }}" class="btn-ss btn-ss-outline">Cancel</a>
+      <button type="submit" class="btn-ss btn-ss-primary"><i class="ti ti-check"></i> Save changes</button>
+    </div>
+  </form>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+let topics={{ skill.topics|tojson }};
+renderTopics();
+document.getElementById('topic-input').addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();addTopic();}});
+function addTopic(){const inp=document.getElementById('topic-input');const v=inp.value.trim();if(!v||topics.includes(v)||topics.length>=10)return;topics.push(v);inp.value='';renderTopics();}
+function removeTopic(t){topics=topics.filter(x=>x!==t);renderTopics();}
+function renderTopics(){const w=document.getElementById('topics-wrap');w.innerHTML=topics.map(t=>`<span class="topic-pill">${t}<button type="button" onclick="removeTopic('${t}')"><i class="ti ti-x"></i></button></span>`).join('');document.getElementById('topics-hidden').value=JSON.stringify(topics);}
+function addOutcome(){const l=document.getElementById('outcomes-list');const d=document.createElement('div');d.className='outcome-row';d.innerHTML=`<i class="ti ti-circle-check" style="color:var(--success);font-size:16px;flex-shrink:0;"></i><input type="text" name="outcomes" class="ss-input" placeholder="Outcome..."/><button type="button" class="btn-ss btn-ss-ghost btn-ss-sm" onclick="removeOutcome(this)"><i class="ti ti-x"></i></button>`;l.appendChild(d);}
+function removeOutcome(btn){const rows=document.querySelectorAll('#outcomes-list .outcome-row');if(rows.length>1)btn.closest('.outcome-row').remove();}
+document.querySelector('form').addEventListener('submit',function(){
+  const vals=[...document.querySelectorAll('.avail-chip.active')].map(c=>c.dataset.val);
+  document.getElementById('avail-hidden').value=JSON.stringify(vals);
+  vals.forEach(v=>{const inp=document.createElement('input');inp.type='hidden';inp.name='availability';inp.value=v;this.appendChild(inp);});
+});
+</script>
+{% endblock %}

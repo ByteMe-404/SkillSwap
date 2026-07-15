@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+{% block title %}Received Requests — SkillSwap{% endblock %}
+{% block content %}
+<div class="ss-page">
+  <!-- Toggle -->
+  <div style="display:flex;justify-content:center;margin-bottom:28px;">
+    <div class="ss-tab-toggle">
+      <a href="{{ url_for('requests.received') }}" class="active">Received Request</a>
+      <a href="{{ url_for('requests.sent') }}">Sent Request</a>
+    </div>
+  </div>
+
+  <h1 class="ss-page-title">Received requests</h1>
+  <p class="ss-page-sub" style="margin-bottom:24px;">Students asking to learn from you.</p>
+
+  <!-- Stats -->
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px;">
+    <div class="ss-stat">
+      <p class="ss-stat-num">{{ requests|length }}</p>
+      <p class="ss-stat-label">Total received</p>
+    </div>
+    <div class="ss-stat">
+      <p class="ss-stat-num">{{ requests|selectattr('status','eq','pending')|list|length }}</p>
+      <p class="ss-stat-label">Pending</p>
+    </div>
+    <div class="ss-stat">
+      <p class="ss-stat-num">{{ requests|selectattr('status','eq','accepted')|list|length }}</p>
+      <p class="ss-stat-label">Accepted</p>
+    </div>
+  </div>
+
+  <!-- Status filter tabs -->
+  <div style="display:flex;gap:8px;margin-bottom:24px;">
+    {% set total = requests|length %}
+    {% for s,label in [('all','All'),('pending','Pending'),('accepted','Accepted'),('rejected','Rejected')] %}
+    <a href="{{ url_for('requests.received', status=s) }}"
+       class="btn-ss btn-ss-sm {% if status == s %}btn-ss-primary{% else %}btn-ss-outline{% endif %}">
+      {{ label }}
+      {% if s == 'all' %}<span style="opacity:.7;">({{ total }})</span>{% endif %}
+    </a>
+    {% endfor %}
+  </div>
+
+  {% if requests %}
+  <div style="display:flex;flex-direction:column;gap:14px;">
+    {% for req in requests %}
+    <div class="req-card {% if req.status == 'pending' %}pending{% endif %}">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <span class="ss-avatar ss-avatar-md">
+            {% if req.requester.profile_photo %}
+              <img src="{{ url_for('static', filename='uploads/profile_photos/'+req.requester.profile_photo) }}"/>
+            {% else %}{{ req.requester.full_name[:2].upper() }}{% endif %}
+          </span>
+          <div>
+            <p style="font-size:14px;font-weight:600;margin:0;">{{ req.requester.full_name }}</p>
+            <p style="font-size:12px;color:var(--text-mid);margin:2px 0 0;">{{ req.requester.department }}, year {{ req.requester.year_of_study }}</p>
+          </div>
+        </div>
+        <span class="ss-badge ss-badge-gray">{{ req.skill.title }}</span>
+      </div>
+
+      {% if req.message %}
+      <div class="req-msg">"{{ req.message }}"</div>
+      {% endif %}
+
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:4px;">
+        <span style="font-size:12px;color:var(--text-light);">{{ req.created_at.strftime('%b %d, %Y') }}</span>
+        <div style="display:flex;gap:8px;align-items:center;">
+          {% if req.status == 'pending' %}
+            <form method="POST" action="{{ url_for('requests.reject', req_id=req.id) }}" style="margin:0;">
+              <button class="btn-ss btn-ss-outline btn-ss-sm">Reject</button>
+            </form>
+            <form method="POST" action="{{ url_for('requests.accept', req_id=req.id) }}" style="margin:0;">
+              <button class="btn-ss btn-ss-sm" style="background:var(--success);color:#fff;border:none;">Accept</button>
+            </form>
+          {% elif req.status == 'accepted' %}
+            <span class="btn-ss btn-ss-sm" style="background:var(--success);color:#fff;cursor:default;">Accepted</span>
+            {% if req.chat %}
+            <a href="{{ url_for('chat.conversation', chat_id=req.chat.id) }}" class="btn-ss btn-ss-primary btn-ss-sm">send message</a>
+            {% endif %}
+          {% elif req.status == 'rejected' %}
+            <span class="btn-ss btn-ss-sm" style="background:var(--danger);color:#fff;cursor:default;">Rejected</span>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="ss-empty">
+    <div class="ss-empty-icon"><i class="ti ti-inbox" style="font-size:28px;color:var(--primary);"></i></div>
+    <h3 class="ss-empty-title">No requests yet</h3>
+    <p class="ss-empty-sub">When students request your skills, they'll appear here.</p>
+    <a href="{{ url_for('skills.add') }}" class="btn-ss btn-ss-primary">Add a skill</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -6,3 +6,4 @@ pymysql
 python-dotenv
 werkzeug
 email-validator
+psycopg2-binary

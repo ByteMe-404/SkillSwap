@@ -35,12 +35,22 @@ def create_app():
         from routes.dashboard   import dashboard_bp
         from routes.profile     import profile_bp
         from routes.skills      import skills_bp
+        from routes.marketplace import marketplace_bp
+        from routes.requests    import requests_bp
+        from routes.chat        import chat_bp
+        from routes.reviews     import reviews_bp
+        from routes.admin       import admin_bp
 
 
         app.register_blueprint(auth_bp)
         app.register_blueprint(dashboard_bp)
         app.register_blueprint(profile_bp)
         app.register_blueprint(skills_bp)
+        app.register_blueprint(marketplace_bp)
+        app.register_blueprint(requests_bp)
+        app.register_blueprint(chat_bp)
+        app.register_blueprint(reviews_bp)
+        app.register_blueprint(admin_bp)
 
 
     return app

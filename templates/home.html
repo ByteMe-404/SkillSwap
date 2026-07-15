@@ -1,2 +1,129 @@
 {% extends 'base.html' %}
-{% block title %}Hello welcome to home{% endblock %}
+{% block title %}SkillSwap — Share what you know{% endblock %}
+{% block content %}
+
+<div class="home-hero">
+  <div class="home-hero-inner">
+    <div class="home-pill">Peer-to-peer learning for university students</div>
+    <h1 style="font-weight: 600;">Share what you know.<br>Learn what you don't.</h1>
+    <p>Connect with fellow students to exchange skills, grow together, and build real-world experience.</p>
+    <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:28px;">
+      <a href="{{ url_for('auth.register') }}" class="btn-ss btn-ss-primary btn-ss-lg">Get Started Free</a>
+      <a href="{{ url_for('marketplace.index') }}" class="btn-ss btn-ss-outline btn-ss-lg">Browse skills</a>
+    </div>
+    <div class="ss-search" style="max-width:520px;margin:0 auto;">
+      <i class="ti ti-search" style="padding:0 12px;color:var(--text-light);font-size:16px;"></i>
+      <input type="text" placeholder="Search for a skill (e.g. Python, Graphic Design...)"
+        onkeydown="if(event.key==='Enter') window.location='/marketplace?q='+this.value"/>
+      <button class="ss-search-btn"
+        onclick="window.location='/marketplace?q='+document.querySelector('.ss-search input').value">search</button>
+    </div>
+  </div>
+</div>
+
+<!-- Stats -->
+<div style="background:var(--white);border-top:1px solid var(--border);border-bottom:1px solid var(--border);">
+  <div class="ss-page" style="padding-top:28px;padding-bottom:28px;">
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;">
+      <div class="ss-stat" style="text-align:center;">
+        <p class="ss-stat-num">1,240+</p>
+        <p class="ss-stat-label"><i class="ti ti-users" style="vertical-align:-2px;margin-right:4px;"></i>Students</p>
+      </div>
+      <div class="ss-stat" style="text-align:center;">
+        <p class="ss-stat-num">389</p>
+        <p class="ss-stat-label"><i class="ti ti-tools" style="vertical-align:-2px;margin-right:4px;"></i>Skills offered</p>
+      </div>
+      <div class="ss-stat" style="text-align:center;">
+        <p class="ss-stat-num">976</p>
+        <p class="ss-stat-label"><i class="ti ti-exchange" style="vertical-align:-2px;margin-right:4px;"></i>Exchanges made</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="ss-page">
+  <!-- Categories -->
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+    <h2 style="font-size:20px;font-weight:700;margin:0;">Browse by category</h2>
+    <a href="{{ url_for('marketplace.index') }}" style="font-size:14px;color:var(--primary);text-decoration:none;font-weight:500;">View all categories →</a>
+  </div>
+  <div class="ss-pill-filter" style="margin-bottom:32px;">
+    <a href="{{ url_for('marketplace.index') }}" class="ss-pill active"><i class="ti ti-layout-grid"></i> All</a>
+    <a href="{{ url_for('marketplace.index', category_id=1) }}" class="ss-pill"><i class="ti ti-code"></i> Programming</a>
+    <a href="{{ url_for('marketplace.index', category_id=2) }}" class="ss-pill"><i class="ti ti-palette"></i> Design</a>
+    <a href="{{ url_for('marketplace.index', category_id=3) }}" class="ss-pill"><i class="ti ti-language"></i> Language</a>
+    <a href="{{ url_for('marketplace.index', category_id=4) }}" class="ss-pill"><i class="ti ti-chart-bar"></i> Data analytics</a>
+    <a href="{{ url_for('marketplace.index', category_id=5) }}" class="ss-pill"><i class="ti ti-music"></i> Music</a>
+    <a href="{{ url_for('marketplace.index', category_id=6) }}" class="ss-pill"><i class="ti ti-camera"></i> photography</a>
+  </div>
+
+  <!-- Featured skills — strict 3-col, cards fixed height -->
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+    <h2 style="font-size:20px;font-weight:700;margin:0;">Featured Skills</h2>
+    <a href="{{ url_for('marketplace.index') }}" style="font-size:14px;color:var(--primary);text-decoration:none;font-weight:500;">View all →</a>
+  </div>
+
+  <div class="home-featured-grid">
+    {% for skill in featured_skills %}
+    <a href="{{ url_for('skills.detail', skill_id=skill.id) }}" style="text-decoration:none;display:flex;flex-direction:column;min-width:0;">
+    <div class="skill-card ss-card-hover" style="height:100%;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-shrink:0;">
+        <span class="ss-avatar ss-avatar-sm" style="flex-shrink:0;">
+          {% if skill.owner.profile_photo %}<img src="{{ url_for('static', filename='uploads/profile_photos/'+skill.owner.profile_photo) }}"/>
+          {% else %}{{ skill.owner.full_name[:2].upper() }}{% endif %}
+        </span>
+        <div style="min-width:0;">
+          <div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ skill.owner.full_name.split()[0] }} {{ skill.owner.full_name.split()[-1][0] }}.</div>
+          <div style="font-size:12px;color:var(--text-light);">{{ skill.owner.department }}, Year {{ skill.owner.year_of_study }}</div>
+        </div>
+      </div>
+      <div class="skill-card-title" style="font-size:15px;font-weight:600;margin-bottom:6px;">{{ skill.title }}</div>
+      <div class="skill-card-desc" style="font-size:13px;color:var(--text-mid);margin:0 0 10px;">{{ skill.short_desc }}</div>
+      <div style="flex-shrink:0;">
+        <span class="ss-badge ss-badge-blue" style="margin-bottom:10px;">{{ skill.category.name }}</span>
+        <div class="skill-card-footer">
+          <div class="ss-rating">
+            <span class="ss-stars">{{ '★'*(skill.avg_rating()|int if skill.avg_rating() else 0) }}{{ '☆'*(5-(skill.avg_rating()|int if skill.avg_rating() else 0)) }}</span>
+            <span class="ss-rating-num">({{ skill.avg_rating() or 'New' }})</span>
+          </div>
+          <span class="btn-ss btn-ss-outline btn-ss-sm">Request</span>
+        </div>
+      </div>
+    </div>
+    </a>
+    {% else %}
+    <div class="ss-card" style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text-light);">
+      <i class="ti ti-tools" style="font-size:32px;display:block;margin-bottom:12px;"></i>
+      <p style="margin:0;">No skills listed yet. <a href="{{ url_for('auth.register') }}" style="color:var(--primary);">Be the first to add one!</a></p>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- How it works -->
+  <h2 style="font-size:20px;font-weight:700;margin:0 0 20px;">How it works</h2>
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:48px;">
+    {% for step in [
+      ('ti-user-plus','Step 1','Create your profile','Sign up and list the skills you can teach others.'),
+      ('ti-search','Step 2','Browse the marketplace','Find students offering the skills you want to learn.'),
+      ('ti-send','Step 3','Send a request','Reach out and propose a skill exchange session.'),
+      ('ti-star','Step 4','Learn & review','Complete the session and leave a review for your peer.')
+    ] %}
+    <div class="ss-card" style="text-align:center;padding:24px 16px;">
+      <div style="font-size:11px;font-weight:600;color:var(--primary);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;">{{ step[1] }}</div>
+      <div style="width:44px;height:44px;border-radius:50%;background:var(--primary-light);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;">
+        <i class="ti {{ step[0] }}" style="font-size:20px;color:var(--primary);"></i>
+      </div>
+      <p style="font-size:14px;font-weight:600;margin:0 0 6px;color:var(--text-dark);">{{ step[2] }}</p>
+      <p style="font-size:13px;color:var(--text-mid);margin:0;line-height:1.5;">{{ step[3] }}</p>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- CTA -->
+  <div class="ss-card" style="text-align:center;padding:48px;background:linear-gradient(135deg,var(--primary-light),#fff);margin-bottom:32px;">
+    <h2 style="font-size:24px;font-weight:700;margin:0 0 10px;">Ready to start learning?</h2>
+    <p style="color:var(--text-mid);margin:0 0 20px;">Join hundreds of students already exchanging skills on campus.</p>
+    <a href="{{ url_for('auth.register') }}" class="btn-ss btn-ss-primary btn-ss-lg">Create your profile</a>
+  </div>
+</div>
+{% endblock %}

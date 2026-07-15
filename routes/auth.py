@@ -7,12 +7,16 @@ auth_bp = Blueprint('auth', __name__)
 
 @auth_bp.route('/')
 def home():
-    return render_template('home.html')
+    if current_user.is_authenticated:
+        return redirect(url_for('dashboard.index'))
+    from models.skill import Skill
+    featured = Skill.query.filter_by(status='active').order_by(Skill.created_at.desc()).limit(3).all()
+    return render_template('home.html', featured_skills=featured)
 
 @auth_bp.route('/register', methods=['GET', 'POST'])
 def register():
     if current_user.is_authenticated:
-        return redirect(url_for('auth.home'))
+        return redirect(url_for('dashboard.index'))
     if request.method == 'POST':
         first_name    = request.form.get('first_name', '').strip()
         last_name     = request.form.get('last_name', '').strip()
@@ -49,14 +53,13 @@ def register():
         db.session.commit()
         login_user(user)
         flash(f'Welcome to SkillSwap, {first_name}!', 'success')
-        return redirect(url_for('dashboard.home'))
+        return redirect(url_for('dashboard.index'))
     return render_template('auth/register.html')
-
 
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
-        return redirect(url_for('auth.home'))
+        return redirect(url_for('dashboard.index'))
     if request.method == 'POST':
         email    = request.form.get('email', '').strip().lower()
         password = request.form.get('password', '')
@@ -64,7 +67,6 @@ def login():
         user = User.query.filter_by(email=email).first()
         if user and user.check_password(password) and user.is_active:
             login_user(user, remember=bool(remember))
-            flash('You have been logged in successfully!', 'success')
             next_page = request.args.get('next')
             return redirect(next_page or url_for('dashboard.index'))
         flash('Invalid email or password.', 'danger')

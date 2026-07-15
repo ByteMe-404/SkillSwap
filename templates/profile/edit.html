@@ -8,7 +8,7 @@
 
   <div style="max-width:680px;">
   <form method="POST" enctype="multipart/form-data">
-
+multipart/form-data
     <!-- Profile photo -->
     <div class="ss-card" style="margin-bottom:16px;">
       <p class="ss-section-title">PROFILE PHOTO</p>
@@ -44,7 +44,7 @@
         <div class="ss-input-group">
           <label class="ss-label">University *</label>
           <select name="university" class="ss-select" required>
-            {% for u in ['BRAC University','North South University','BUET','Dhaka University','Shanto-Mariam University of Creative Technology','Independent University Bangladesh','East West University','Other'] %}
+            {% for u in ['BRAC University','North South University','BUET','Dhaka University','Independent University Bangladesh','East West University','Other'] %}
             <option {% if current_user.university == u %}selected{% endif %}>{{ u }}</option>
             {% endfor %}
             <option {% if current_user.university not in ['BRAC University','North South University','BUET','Dhaka University','Independent University Bangladesh','East West University','Other'] %}selected{% endif %} value="{{ current_user.university }}">{{ current_user.university }}</option>
@@ -95,6 +95,16 @@
     </div>
   </form>
 
+  <!-- Danger zone -->
+  <div style="border:1.5px solid #FECACA;border-radius:var(--radius);padding:20px;">
+    <h3 style="font-size:14px;font-weight:600;color:var(--danger);margin:0 0 8px;"><i class="ti ti-alert-triangle" style="margin-right:6px;"></i>Danger zone</h3>
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;">
+      <p style="font-size:13px;color:var(--text-mid);margin:0;">Permanently delete your account. All your skills, requests, and reviews will be removed. This cannot be undone.</p>
+      <form method="POST" action="{{ url_for('profile.delete') }}" onsubmit="return confirm('Are you absolutely sure? This cannot be undone.')">
+        <button class="btn-ss btn-ss-danger btn-ss-sm" style="white-space:nowrap;">Delete account</button>
+      </form>
+    </div>
+  </div>
   </div>
 </div>
 {% endblock %}

@@ -2,33 +2,68 @@
 {% block title %}{{ user.full_name }} — SkillSwap{% endblock %}
 {% block content %}
 <div class="ss-page">
-    <div style="display:grid;grid-template-columns:260px 1fr;gap:24px;align-items:start;">
-
-        <div class="profile-sidebar">
-            {% if user.profile_photo %}
-            <img src="{{ url_for('static', filename='uploads/profile_photos/'+user.profile_photo) }}"
-                style="width:80px;height:80px;border-radius:50%;object-fit:cover;margin:0 auto 16px;display:block;" />
-            {% else %}
-            <div class="ss-avatar ss-avatar-xl" style="margin:0 auto 16px;">{{ user.full_name[:2].upper() }}</div>
-            {% endif %}
-            <h2 style="font-size:18px;font-weight:700;margin:0 0 4px;word-break:break-word;">{{ user.full_name }}</h2>
-            <p style="color:var(--text-mid);font-size:13px;margin:0 0 4px;">{{ user.department }} · Year {{
-                user.year_of_study }}</p>
-            <p style="color:var(--text-light);font-size:13px;margin:0 0 16px;word-break:break-word;">{{ user.email }}
-            </p>
-            {% if user.bio %}
-            <p
-                style="font-size:13px;color:var(--text-mid);line-height:1.6;margin:0 0 16px;text-align:left;padding-top:14px;border-top:1px solid var(--border);word-break:break-word;">
-                {{ user.bio }}</p>
-            {% endif %}
-            {% if current_user.is_authenticated and current_user.id == user.id %}
-            <a href="{{ url_for('profile.edit') }}" class="btn-ss btn-ss-outline btn-ss-block btn-ss-sm"
-                style="margin-bottom:16px;">
-                <i class="ti ti-edit"></i> Edit profile
-            </a>
-            {% endif %}
-
+  <div style="display:grid;grid-template-columns:260px 1fr;gap:24px;align-items:start;">
+    <div class="profile-sidebar">
+      {% if user.profile_photo %}
+        <img src="{{ url_for('static', filename='uploads/profile_photos/'+user.profile_photo) }}"
+             style="width:80px;height:80px;border-radius:50%;object-fit:cover;margin:0 auto 16px;display:block;"/>
+      {% else %}
+        <div class="ss-avatar ss-avatar-xl" style="margin:0 auto 16px;">{{ user.full_name[:2].upper() }}</div>
+      {% endif %}
+      <h2 style="font-size:18px;font-weight:700;margin:0 0 4px;word-break:break-word;">{{ user.full_name }}</h2>
+      <p style="color:var(--text-mid);font-size:13px;margin:0 0 4px;">{{ user.department }} · Year {{ user.year_of_study }}</p>
+      <p style="color:var(--text-light);font-size:13px;margin:0 0 16px;word-break:break-word;">{{ user.university }}</p>
+      {% if user.bio %}
+      <p style="font-size:13px;color:var(--text-mid);line-height:1.6;margin:0 0 16px;text-align:left;padding-top:14px;border-top:1px solid var(--border);word-break:break-word;">{{ user.bio }}</p>
+      {% endif %}
+      {% if current_user.is_authenticated and current_user.id == user.id %}
+      <a href="{{ url_for('profile.edit') }}" class="btn-ss btn-ss-outline btn-ss-block btn-ss-sm" style="margin-bottom:16px;">
+        <i class="ti ti-edit"></i> Edit profile
+      </a>
+      {% endif %}
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding-top:14px;border-top:1px solid var(--border);">
+        <div style="text-align:center;">
+          <p style="font-size:20px;font-weight:700;margin:0;">{{ skills|length }}</p>
+          <p style="font-size:11px;color:var(--text-light);margin:4px 0 0;">Skills</p>
         </div>
+        <div style="text-align:center;">
+          <p style="font-size:20px;font-weight:700;margin:0;">{{ user.avg_rating() or '—' }}</p>
+          <p style="font-size:11px;color:var(--text-light);margin:4px 0 0;">Rating</p>
+        </div>
+        <div style="text-align:center;">
+          <p style="font-size:20px;font-weight:700;margin:0;">{{ user.reviews_received.count() }}</p>
+          <p style="font-size:11px;color:var(--text-light);margin:4px 0 0;">Reviews</p>
+        </div>
+      </div>
     </div>
+
+    <div>
+      <h3 style="font-size:17px;font-weight:700;margin:0 0 16px;">Skills offered ({{ skills|length }})</h3>
+      {% if skills %}
+      <div class="profile-skills-grid">
+        {% for skill in skills %}
+        <a href="{{ url_for('skills.detail', skill_id=skill.id) }}" style="text-decoration:none;display:flex;flex-direction:column;min-width:0;">
+        <div class="skill-card ss-card-hover" style="height:100%;">
+          <span class="ss-badge ss-badge-blue" style="margin-bottom:8px;align-self:flex-start;">{{ skill.category.name }}</span>
+          <div class="skill-card-title" style="font-size:14px;font-weight:600;margin-bottom:6px;">{{ skill.title }}</div>
+          <div class="skill-card-desc" style="font-size:13px;color:var(--text-mid);margin:0;">{{ skill.short_desc }}</div>
+          <div class="skill-card-footer" style="margin-top:auto;padding-top:10px;border-top:1px solid var(--border);">
+            <div class="ss-rating">
+              <span class="ss-stars">{{ '★'*(skill.avg_rating()|int if skill.avg_rating() else 0) }}{{ '☆'*(5-(skill.avg_rating()|int if skill.avg_rating() else 0)) }}</span>
+              <span class="ss-rating-num">({{ skill.avg_rating() or 'New' }})</span>
+            </div>
+          </div>
+        </div>
+        </a>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="ss-empty" style="padding:40px 0;">
+        <div class="ss-empty-icon"><i class="ti ti-tools" style="font-size:24px;color:var(--primary);"></i></div>
+        <p class="ss-empty-sub">No active skills listed yet.</p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
 </div>
 {% endblock %}

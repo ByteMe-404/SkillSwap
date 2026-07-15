@@ -1,0 +1,141 @@
+{% extends 'base.html' %}
+{% block title %}Skill Marketplace — SkillSwap{% endblock %}
+{% block content %}
+<div style="background:var(--white);border-bottom:1px solid var(--border);padding:28px 32px;text-align:center;">
+  <h1 style="font-size:28px;font-weight:800;margin:0 0 8px;">Skill marketplace</h1>
+  <p style="color:var(--text-mid);margin:0 0 20px;font-size:14px;">Browse skills offered by fellow students and send a request to learn.</p>
+  <form method="GET" style="display:flex;gap:10px;justify-content:center;max-width:640px;margin:0 auto;">
+    <div class="ss-search" style="flex:1;">
+      <i class="ti ti-search" style="padding:0 12px;color:var(--text-light);"></i>
+      <input type="text" name="q" placeholder="Search skills..." value="{{ query }}"/>
+      <button type="submit" class="ss-search-btn">Search</button>
+    </div>
+    <select name="category_id" class="ss-select" style="width:170px;" onchange="this.form.submit()">
+      <option value="">All categories</option>
+      {% for cat in categories %}
+      <option value="{{ cat.id }}" {% if selected_category==cat.id|string %}selected{% endif %}>{{ cat.name }}</option>
+      {% endfor %}
+    </select>
+    <select name="level" class="ss-select" style="width:130px;" onchange="this.form.submit()">
+      <option value="">All year</option>
+      <option {% if selected_level=='Beginner' %}selected{% endif %}>Beginner</option>
+      <option {% if selected_level=='Intermediate' %}selected{% endif %}>Intermediate</option>
+      <option {% if selected_level=='Advanced' %}selected{% endif %}>Advanced</option>
+    </select>
+  </form>
+</div>
+
+<div class="ss-page">
+  <!-- Category pills -->
+  <div class="ss-pill-filter">
+    <a href="{{ url_for('marketplace.index') }}" class="ss-pill {% if not selected_category %}active{% endif %}">All</a>
+    {% for cat in categories %}
+    <a href="{{ url_for('marketplace.index', category_id=cat.id) }}"
+       class="ss-pill {% if selected_category==cat.id|string %}active{% endif %}">
+      <i class="ti {{ cat.icon }}"></i> {{ cat.name }}
+    </a>
+    {% endfor %}
+  </div>
+
+  <div style="display:grid;grid-template-columns:200px 1fr;gap:24px;">
+    <!-- Sidebar -->
+    <div class="market-sb" style="position: sticky; top: 30px; height: calc(100vh - 40px); overflow-y: auto;">
+      <div class="ss-card" style="padding:16px;">
+        <p class="ss-section-title">CATEGORY</p>
+        {% for cat in categories %}
+        <label style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;cursor:pointer;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <input type="checkbox" style="accent-color:var(--primary);"
+              {% if selected_category==cat.id|string %}checked{% endif %}
+              onchange="window.location='{{ url_for('marketplace.index', category_id=cat.id) }}'"/>
+            <span style="font-size:13px;color:var(--text-dark);">{{ cat.name }}</span>
+          </div>
+          <span style="font-size:12px;color:var(--text-light);">{{ cat.skills.filter_by(status='active').count() }}</span>
+        </label>
+        {% endfor %}
+        <hr class="ss-divider"/>
+        <p class="ss-section-title">MIN RATING</p>
+        {% for r in ['5.0','4.0 +','3.0 +','Any'] %}
+        <label style="display:flex;align-items:center;gap:8px;margin-bottom:8px;cursor:pointer;">
+          <input type="radio" name="min_rating" style="accent-color:var(--primary);"/>
+          <span style="font-size:13px;color:var(--text-dark);">{% if r!='Any' %}<span style="color:#F59E0B;">★</span> {% endif %}{{ r }}</span>
+        </label>
+        {% endfor %}
+        <hr class="ss-divider"/>
+        <p class="ss-section-title">YEAR OF STUDY</p>
+        {% for y in ['Year 1','Year 2','Year 3','Year 4','Year 5+'] %}
+        <label style="display:flex;align-items:center;gap:8px;margin-bottom:8px;cursor:pointer;">
+          <input type="checkbox" style="accent-color:var(--primary);"/>
+          <span style="font-size:13px;color:var(--text-dark);">{{ y }}</span>
+        </label>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Grid -->
+    <div>
+      {% if skills.items %}
+      <p style="font-size:13px;color:var(--text-light);margin-bottom:16px;">Showing <strong style="color:var(--text-dark);">{{ skills.total }}</strong> skill{{ 's' if skills.total!=1 }}</p>
+
+      <div class="marketplace-grid" style="margin-bottom:28px;">
+        {% for skill in skills.items %}
+        <a href="{{ url_for('skills.detail', skill_id=skill.id) }}" style="text-decoration:none;display:flex;flex-direction:column;min-width:0;">
+        <div class="skill-card ss-card-hover" style="height:100%;">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-shrink:0;">
+            <span class="ss-avatar ss-avatar-sm" style="flex-shrink:0;">
+              {% if skill.owner.profile_photo %}<img src="{{ url_for('static', filename='uploads/profile_photos/'+skill.owner.profile_photo) }}"/>
+              {% else %}{{ skill.owner.full_name[:2].upper() }}{% endif %}
+            </span>
+            <div style="min-width:0;">
+              <div style="font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ skill.owner.full_name.split()[0] }} {{ skill.owner.full_name.split()[-1][0] }}.</div>
+              <div style="font-size:11px;color:var(--text-light);">{{ skill.owner.department }}, Year {{ skill.owner.year_of_study }}</div>
+            </div>
+          </div>
+          <div class="skill-card-title" style="font-size:14px;font-weight:600;margin-bottom:6px;">{{ skill.title }}</div>
+          <div class="skill-card-desc" style="font-size:13px;color:var(--text-mid);margin:0 0 10px;">{{ skill.short_desc }}</div>
+          <div style="flex-shrink:0;">
+            <span class="ss-badge ss-badge-blue" style="margin-bottom:10px;">{{ skill.category.name }}</span>
+            <div class="skill-card-footer">
+              <div class="ss-rating">
+                <span class="ss-stars">{{ '★'*(skill.avg_rating()|int if skill.avg_rating() else 4) }}{{ '☆'*(5-(skill.avg_rating()|int if skill.avg_rating() else 4)) }}</span>
+                <span class="ss-rating-num">({{ skill.avg_rating() or '4.5' }})</span>
+              </div>
+              <span class="btn-ss btn-ss-outline btn-ss-sm">Request</span>
+            </div>
+          </div>
+        </div>
+        </a>
+        {% endfor %}
+      </div>
+
+      {% if skills.pages > 1 %}
+      <div style="display:flex;justify-content:center;gap:6px;">
+        {% if skills.has_prev %}
+        <a href="{{ url_for('marketplace.index', page=skills.page-1, q=query, category_id=selected_category, level=selected_level) }}" class="btn-ss btn-ss-outline btn-ss-sm">‹</a>
+        {% endif %}
+        {% for p in skills.iter_pages() %}
+          {% if p %}
+          <a href="{{ url_for('marketplace.index', page=p, q=query, category_id=selected_category, level=selected_level) }}"
+             class="btn-ss {% if p==skills.page %}btn-ss-primary{% else %}btn-ss-outline{% endif %} btn-ss-sm">{{ p }}</a>
+          {% else %}
+          <span style="padding:5px 8px;color:var(--text-light);">…</span>
+          {% endif %}
+        {% endfor %}
+        {% if skills.has_next %}
+        <a href="{{ url_for('marketplace.index', page=skills.page+1, q=query, category_id=selected_category, level=selected_level) }}" class="btn-ss btn-ss-outline btn-ss-sm">›</a>
+        {% endif %}
+      </div>
+      {% endif %}
+
+      {% else %}
+      <div class="ss-empty">
+        <div class="ss-empty-icon"><i class="ti ti-search-off" style="font-size:28px;color:var(--primary);"></i></div>
+        <h3 class="ss-empty-title">No skills found</h3>
+        <p class="ss-empty-sub">Try different search terms or clear the filters.</p>
+        <a href="{{ url_for('marketplace.index') }}" class="btn-ss btn-ss-outline">Clear filters</a>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

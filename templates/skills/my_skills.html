@@ -7,7 +7,7 @@
       <h1 class="ss-page-title">My skills</h1>
       <p class="ss-page-sub">Manage the skills you offer to other students.</p>
     </div>
-    <a href="#" class="btn-ss btn-ss-primary"><i class="ti ti-plus"></i> Add skill</a>
+    <a href="{{ url_for('skills.add') }}" class="btn-ss btn-ss-primary"><i class="ti ti-plus"></i> Add skill</a>
   </div>
 
   <div class="stats-row-4">
@@ -32,12 +32,12 @@
     </div>
   </div>
 
-  <!-- {% if current_user.received_requests.filter_by(status='pending').count() > 0 %}
+  {% if current_user.received_requests.filter_by(status='pending').count() > 0 %}
   <div class="ss-alert ss-alert-info" style="justify-content:space-between;margin-bottom:20px;">
     <span><i class="ti ti-bell"></i> You have <strong>{{ current_user.received_requests.filter_by(status='pending').count() }} pending requests</strong> waiting.</span>
     <a href="{{ url_for('requests.received', status='pending') }}" class="btn-ss btn-ss-primary btn-ss-sm">View Requests</a>
   </div>
-  {% endif %} -->
+  {% endif %}
 
   <div style="display:flex;gap:10px;margin-bottom:24px;">
     <div class="ss-search" style="flex:1;">
@@ -70,7 +70,7 @@
         </div>
       </div>
 
-      <a href="#" class="skill-card-title" style="text-decoration:none;color:var(--text-dark);font-size:15px;font-weight:600;margin-bottom:6px;">{{ skill.title }}</a>
+      <a href="{{ url_for('skills.detail', skill_id=skill.id) }}" class="skill-card-title" style="text-decoration:none;color:var(--text-dark);font-size:15px;font-weight:600;margin-bottom:6px;">{{ skill.title }}</a>
       <p class="skill-card-desc" style="font-size:13px;color:var(--text-mid);margin:0 0 10px;">{{ skill.short_desc }}</p>
 
       <div style="flex-shrink:0;">
@@ -83,8 +83,8 @@
           <span class="ss-badge ss-status-{{ skill.status }}">{{ skill.status.capitalize() }}</span>
         </div>
         <div style="display:flex;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);">
-          <a href="#" class="btn-ss btn-ss-outline btn-ss-sm" style="flex:1;justify-content:center;">edit</a>
-          <form method="POST" action="#" onsubmit="return confirm('Delete this skill?')" style="margin:0;flex:1;">
+          <a href="{{ url_for('skills.edit', skill_id=skill.id) }}" class="btn-ss btn-ss-outline btn-ss-sm" style="flex:1;justify-content:center;">edit</a>
+          <form method="POST" action="{{ url_for('skills.delete', skill_id=skill.id) }}" onsubmit="return confirm('Delete this skill?')" style="margin:0;flex:1;">
             <button class="btn-ss btn-ss-danger btn-ss-sm" style="width:100%;justify-content:center;">delete</button>
           </form>
         </div>
@@ -92,7 +92,7 @@
     </div>
     {% endfor %}
 
-    <a href="#" class="add-skill-placeholder">
+    <a href="{{ url_for('skills.add') }}" class="add-skill-placeholder">
       <div style="width:48px;height:48px;border-radius:50%;background:var(--bg);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;margin-bottom:10px;">
         <i class="ti ti-plus" style="font-size:22px;color:var(--text-light);"></i>
       </div>
@@ -104,7 +104,7 @@
     <div class="ss-empty-icon"><i class="ti ti-tools" style="font-size:28px;color:var(--primary);"></i></div>
     <h3 class="ss-empty-title">No skills yet</h3>
     <p class="ss-empty-sub">Add your first skill to start receiving requests from students.</p>
-    <a href="#" class="btn-ss btn-ss-primary">Add a skill</a>
+    <a href="{{ url_for('skills.add') }}" class="btn-ss btn-ss-primary">Add a skill</a>
   </div>
   {% endif %}
 </div>

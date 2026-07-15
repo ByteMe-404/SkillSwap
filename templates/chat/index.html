@@ -1,0 +1,249 @@
+{% extends 'base.html' %}
+{% block title %}Chats — SkillSwap{% endblock %}
+{% block content %}
+<div class="ss-chat-layout">
+
+  <div class="ss-chat-sidebar">
+    <div style="padding:16px;border-bottom:1px solid var(--border);">
+      <p style="font-size:16px;font-weight:700;margin:0;">Messages</p>
+    </div>
+    <div style="padding:10px 12px;border-bottom:1px solid var(--border);">
+      <div class="ss-search" style="border-radius:8px;">
+        <i class="ti ti-search" style="padding:0 10px;color:var(--text-light);font-size:14px;"></i>
+        <input type="text" placeholder="Search conversations..." id="conv-search"
+               oninput="filterConvs()" style="padding:7px 0;font-size:13px;"/>
+      </div>
+    </div>
+    <div style="overflow-y:auto;flex:1;">
+      {% if chats %}
+        {% for c in chats %}
+        {% set other = c.other_user(current_user.id) %}
+        {% set last  = c.last_message() %}
+        <a href="{{ url_for('chat.conversation', chat_id=c.id) }}"
+           class="ss-chat-conv {% if active_chat and active_chat.id == c.id %}active{% endif %}"
+           data-name="{{ other.full_name|lower }}">
+          <span class="ss-avatar ss-avatar-sm" style="flex-shrink:0;">
+            {% if other.profile_photo %}
+              <img src="{{ url_for('static', filename='uploads/profile_photos/'+other.profile_photo) }}"/>
+            {% else %}{{ other.full_name[:2].upper() }}{% endif %}
+          </span>
+          <div style="flex:1;min-width:0;">
+            <p style="font-size:13px;font-weight:600;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ other.full_name }}</p>
+            <p style="font-size:12px;color:var(--text-light);margin:2px 0 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+              {{ last.body if last else 'Start the conversation' }}
+            </p>
+          </div>
+          {% if last %}
+          <span style="font-size:11px;color:var(--text-light);white-space:nowrap;flex-shrink:0;">
+            {{ last.created_at.strftime('%b %d') }}
+          </span>
+          {% endif %}
+        </a>
+        {% endfor %}
+      {% else %}
+        <div style="padding:32px 16px;text-align:center;">
+          <p style="font-size:13px;color:var(--text-light);margin:0;">No conversations yet.</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="ss-chat-main">
+    {% if active_chat %}
+    {% set other = active_chat.other_user(current_user.id) %}
+
+      <div style="display:flex;align-items:center;gap:12px;padding:14px 20px;border-bottom:1px solid var(--border);background:var(--white);flex-shrink:0;">
+        <span class="ss-avatar ss-avatar-md" style="flex-shrink:0;">
+          {% if other.profile_photo %}
+            <img src="{{ url_for('static', filename='uploads/profile_photos/'+other.profile_photo) }}"/>
+          {% else %}{{ other.full_name[:2].upper() }}{% endif %}
+        </span>
+        <div>
+          <p style="font-size:14px;font-weight:600;margin:0;">{{ other.full_name }}</p>
+          <p style="font-size:12px;color:var(--text-mid);margin:2px 0 0;">
+            {{ other.department }} · Year {{ other.year_of_study }}
+          </p>
+        </div>
+        <div style="margin-left:auto;">
+          <span class="ss-badge ss-badge-blue">
+            <i class="ti ti-exchange" style="margin-right:4px;"></i>{{ active_chat.request.skill.title }}
+          </span>
+        </div>
+      </div>
+
+      <div class="ss-chat-messages" id="msg-container">
+        <div style="text-align:center;padding:4px 0;">
+          <span style="background:var(--bg);border:1px solid var(--border);border-radius:999px;
+                       padding:4px 14px;font-size:12px;color:var(--text-light);">
+            Chat opened · {{ active_chat.created_at.strftime('%b %d, %Y') }}
+          </span>
+        </div>
+
+        <div id="messages-list">
+          {% for msg in messages %}
+          <div class="msg-bubble-row {% if msg.sender_id == current_user.id %}mine{% else %}theirs{% endif %}"
+               data-id="{{ msg.id }}">
+            {% if msg.sender_id != current_user.id %}
+            <span class="ss-avatar ss-avatar-xs" style="flex-shrink:0;">{{ other.full_name[:2].upper() }}</span>
+            {% endif %}
+            <div>
+              <div class="ss-bubble {% if msg.sender_id == current_user.id %}ss-bubble-mine{% else %}ss-bubble-theirs{% endif %}">
+                {{ msg.body }}
+              </div>
+              <p class="msg-time">{{ msg.created_at.strftime('%H:%M') }}</p>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div style="margin-bottom:20px ; padding:12px 16px;border-top:1px solid var(--border);background:var(--white);flex-shrink:0;">
+        <div style="display:flex;gap:10px;">
+          <input type="text" id="msg-input" class="ss-input" placeholder="Type a message..."
+                 autocomplete="off" style="flex:1;"
+                 onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMessage();}"/>
+          <button onclick="sendMessage()" class="btn-ss btn-ss-primary" style="padding:9px 18px;flex-shrink:0;">
+            <i class="ti ti-send"></i>
+          </button>
+        </div>
+        <p id="send-error" style="color:var(--danger);font-size:12px;margin:4px 0 0;display:none;">
+          Failed to send. Please try again.
+        </p>
+      </div>
+
+    {% elif chats %}
+      <div class="ss-empty">
+        <div class="ss-empty-icon"><i class="ti ti-message" style="font-size:28px;color:var(--primary);"></i></div>
+        <h3 class="ss-empty-title">Select a conversation</h3>
+        <p class="ss-empty-sub">Choose a chat from the left to start messaging.</p>
+      </div>
+    {% else %}
+      <div class="ss-empty">
+        <div class="ss-empty-icon"><i class="ti ti-message-off" style="font-size:28px;color:var(--primary);"></i></div>
+        <h3 class="ss-empty-title">No chats yet</h3>
+        <p class="ss-empty-sub">When a teacher accepts your request, a conversation will open here.</p>
+        <a href="{{ url_for('marketplace.index') }}" class="btn-ss btn-ss-primary">Browse marketplace</a>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{% if active_chat %}
+<script>
+const CHAT_ID     = {{ active_chat.id }};
+const CURRENT_UID = {{ current_user.id }};
+const OTHER_INIT  = "{{ active_chat.other_user(current_user.id).full_name[:2].upper() }}";
+const SEND_URL    = "{{ url_for('chat.conversation', chat_id=active_chat.id) }}";
+const POLL_URL    = "{{ url_for('chat.poll', chat_id=active_chat.id) }}";
+
+const container   = document.getElementById('msg-container');
+const msgList     = document.getElementById('messages-list');
+
+function scrollBottom(smooth=true) {
+  container.scrollTo({ top: container.scrollHeight, behavior: smooth ? 'smooth' : 'instant' });
+}
+scrollBottom(false);   
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function timeStr(iso) {
+  const d = new Date(iso.endsWith('Z') ? iso : iso + 'Z');
+  return d.toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' });
+}
+
+function renderBubble(msg) {
+  const isMine = msg.sender_id === CURRENT_UID;
+  const row    = document.createElement('div');
+  row.className  = 'msg-bubble-row ' + (isMine ? 'mine' : 'theirs');
+  row.dataset.id = msg.id;
+
+  const avatarHtml = isMine ? '' :
+    `<span class="ss-avatar ss-avatar-xs" style="flex-shrink:0;">${OTHER_INIT}</span>`;
+
+  row.innerHTML = `
+    ${avatarHtml}
+    <div>
+      <div class="ss-bubble ${isMine ? 'ss-bubble-mine' : 'ss-bubble-theirs'}">${escHtml(msg.body)}</div>
+      <p class="msg-time">${timeStr(msg.created_at)}</p>
+    </div>`;
+  return row;
+}
+
+async function sendMessage() {
+  const input = document.getElementById('msg-input');
+  const body  = input.value.trim();
+  if (!body) return;
+
+  const saved = body;
+  input.value   = '';
+  input.disabled = true;
+  document.getElementById('send-error').style.display = 'none';
+
+  try {
+    const res  = await fetch(SEND_URL, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded',
+                 'X-Requested-With': 'XMLHttpRequest' },
+      body: 'body=' + encodeURIComponent(saved)
+    });
+    const data = await res.json();
+    if (data.ok) {
+      msgList.appendChild(renderBubble(data.message));
+      lastMsgId = data.message.id;
+      scrollBottom();
+    } else {
+      input.value = saved;
+      document.getElementById('send-error').style.display = 'block';
+    }
+  } catch(e) {
+    input.value = saved;
+    document.getElementById('send-error').style.display = 'block';
+  } finally {
+    input.disabled = false;
+    input.focus();
+  }
+}
+
+let lastMsgId = {{ messages[-1].id if messages else 0 }};
+
+async function poll() {
+  try {
+    const res  = await fetch(`${POLL_URL}?after=${lastMsgId}`);
+    const data = await res.json();
+    if (data.messages && data.messages.length) {
+      const nearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 100;
+      data.messages.forEach(m => {
+        if (!msgList.querySelector(`[data-id="${m.id}"]`)) {
+          msgList.appendChild(renderBubble(m));
+          lastMsgId = m.id;
+        }
+      });
+      if (nearBottom) scrollBottom();
+    }
+  } catch(e) { }
+}
+
+setInterval(poll, 3000);
+
+function filterConvs() {
+  const q = (document.getElementById('conv-search').value || '').toLowerCase();
+  document.querySelectorAll('.ss-chat-conv').forEach(el => {
+    el.style.display = (!q || (el.dataset.name||'').includes(q)) ? '' : 'none';
+  });
+}
+</script>
+{% else %}
+<script>
+function filterConvs() {
+  const q = (document.getElementById('conv-search')?.value || '').toLowerCase();
+  document.querySelectorAll('.ss-chat-conv').forEach(el => {
+    el.style.display = (!q || (el.dataset.name||'').includes(q)) ? '' : 'none';
+  });
+}
+</script>
+{% endif %}
+{% endblock %}

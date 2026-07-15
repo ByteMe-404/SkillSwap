@@ -1,9 +1,89 @@
 {% extends 'base.html' %}
+{% block title %}Dashboard — SkillSwap{% endblock %}
 {% block content %}
-<div style="display: flex;justify-content: center;align-items: center;width: 100%;margin-top: 200px;">
-    
-    <h1>welcome to dashboard</h1>
+<div class="ss-page">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:28px;">
+    <div>
+      <h1 class="ss-page-title">Welcome back, {{ current_user.full_name.split()[0] }} 👋</h1>
+      <p class="ss-page-sub">Here's what's happening with your skills.</p>
+    </div>
+    <a href="{{ url_for('skills.add') }}" class="btn-ss btn-ss-primary"><i class="ti ti-plus"></i> Add skill</a>
+  </div>
+
+  <div class="stats-row-4">
+    <div class="ss-stat">
+      <p class="ss-stat-num">{{ my_skills }}</p>
+      <p class="ss-stat-label">Skills offered</p>
+    </div>
+    <div class="ss-stat">
+      <p class="ss-stat-num">{{ sent_requests }}</p>
+      <p class="ss-stat-label">Requests sent</p>
+    </div>
+    <div class="ss-stat">
+      <p class="ss-stat-num">{{ recv_requests }}</p>
+      <p class="ss-stat-label">Requests received</p>
+    </div>
+    <div class="ss-stat" style="{% if pending_recv > 0 %}background:var(--primary);{% endif %}">
+      <p class="ss-stat-num" style="{% if pending_recv > 0 %}color:#fff;{% endif %}">{{ pending_recv }}</p>
+      <p class="ss-stat-label" style="{% if pending_recv > 0 %}color:rgba(255,255,255,.8);{% endif %}">Pending requests</p>
+    </div>
+  </div>
+
+  {% if pending_recv > 0 %}
+  <div class="ss-alert ss-alert-info" style="margin-bottom:24px;justify-content:space-between;">
+    <span><i class="ti ti-bell"></i> You have <strong>{{ pending_recv }} pending request{{ 's' if pending_recv != 1 }}</strong> waiting.</span>
+    <a href="{{ url_for('requests.received', status='pending') }}" style="color:var(--primary);font-weight:600;text-decoration:none;white-space:nowrap;">View →</a>
+  </div>
+  {% endif %}
+
+  {% if my_skills == 0 %}
+  <div class="ss-alert ss-alert-warning" style="margin-bottom:24px;">
+    <i class="ti ti-bulb"></i>
+    You haven't added any skills yet.
+    <a href="{{ url_for('skills.add') }}" style="color:#92400E;font-weight:600;margin-left:8px;text-decoration:none;">Add your first skill →</a>
+  </div>
+  {% endif %}
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
+    <div class="ss-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <h3 style="font-size:15px;font-weight:600;margin:0;">Recent sent requests</h3>
+        <a href="{{ url_for('requests.sent') }}" style="font-size:13px;color:var(--primary);text-decoration:none;">View all</a>
+      </div>
+      {% if recent_sent %}
+        {% for req in recent_sent %}
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);gap:8px;">
+          <div style="min-width:0;flex:1;">
+            <p style="font-size:13px;font-weight:500;margin:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ req.skill.title }}</p>
+            <p style="font-size:12px;color:var(--text-light);margin:2px 0 0;">to {{ req.teacher.full_name }}</p>
+          </div>
+          <span class="ss-badge ss-status-{{ req.status }}" style="flex-shrink:0;">{{ req.status }}</span>
+        </div>
+        {% endfor %}
+      {% else %}
+        <p style="color:var(--text-light);font-size:13px;text-align:center;padding:20px 0;margin:0;">No requests sent yet.</p>
+      {% endif %}
+    </div>
+
+    <div class="ss-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <h3 style="font-size:15px;font-weight:600;margin:0;">Recent received requests</h3>
+        <a href="{{ url_for('requests.received') }}" style="font-size:13px;color:var(--primary);text-decoration:none;">View all</a>
+      </div>
+      {% if recent_recv %}
+        {% for req in recent_recv %}
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);gap:8px;">
+          <div style="min-width:0;flex:1;">
+            <p style="font-size:13px;font-weight:500;margin:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ req.requester.full_name }}</p>
+            <p style="font-size:12px;color:var(--text-light);margin:2px 0 0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">→ {{ req.skill.title }}</p>
+          </div>
+          <span class="ss-badge ss-status-{{ req.status }}" style="flex-shrink:0;">{{ req.status }}</span>
+        </div>
+        {% endfor %}
+      {% else %}
+        <p style="color:var(--text-light);font-size:13px;text-align:center;padding:20px 0;margin:0;">No requests received yet.</p>
+      {% endif %}
+    </div>
+  </div>
 </div>
-
-
 {% endblock %}

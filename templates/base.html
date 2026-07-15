@@ -12,18 +12,32 @@
 <body>
 
     <nav class="ss-nav">
-        <!--logo-->
-        <a href="{{url_for('auth.home')}}" class="ss-nav-brand"><img src="/static/images/logo.png" alt="logo"></a>
-        <!--nav links-->
+        <a href="{{ url_for('auth.home') }}" class="ss-nav-brand">
+            <img src="/static/images/logo.png" alt="">
+        </a>
         <div class="ss-nav-links">
-            <a href="{{url_for('dashboard.index')}}">Dashboard</a>
-            <a href="{{url_for('auth.home')}}">Browse Skill</a>
-            <a href="{{ url_for('skills.my_skills')}}">My Skills</a>
-            <a href="{{url_for('auth.home')}}">Requests</a>
-            <a href="{{url_for('auth.home')}}">Chats</a>
+            {% if current_user.is_authenticated %}
+            <a href="{{ url_for('dashboard.index') }}"
+                class="{% if request.endpoint == 'dashboard.index' %}active{% endif %}">Dashboard</a>
+            <a href="{{ url_for('marketplace.index') }}"
+                class="{% if request.endpoint == 'marketplace.index' %}active{% endif %}">Browse Skills</a>
+            <a href="{{ url_for('skills.my_skills') }}"
+                class="{% if 'skills.' in request.endpoint %}active{% endif %}">My Skills</a>
+            <a href="{{ url_for('requests.received') }}"
+                class="{% if 'requests.' in request.endpoint %}active{% endif %}">Requests</a>
+            <a href="{{ url_for('chat.index') }}"
+                class="{% if 'chat.' in request.endpoint %}active{% endif %}">Chats</a>
+            {% if current_user.is_admin() %}
+            <a href="{{ url_for('admin.dashboard') }}"
+                class="{% if 'admin.' in request.endpoint %}active{% endif %}">Admin</a>
+            {% endif %}
+            {% else %}
+            <a href="{{ url_for('auth.home') }}">Dashboard</a>
+            <a href="{{ url_for('marketplace.index') }}">Browse Skills</a>
+            <a href="{{ url_for('auth.home') }}">My Skills</a>
+            <a href="{{ url_for('auth.home') }}">About</a>
+            {% endif %}
         </div>
-
-
         <div class="ss-nav-actions">
             {% if current_user.is_authenticated %}
             <a href="{{ url_for('profile.view', user_id=current_user.id) }}"
@@ -33,22 +47,26 @@
                     <img
                         src="{{ url_for('static', filename='uploads/profile_photos/' + current_user.profile_photo) }}" />
                     {% else %}
-                    {{ current_user.full_name[:2].upper() }}
+                    <span class="ss-avatar ss-avatar-sm">
+                        {% if current_user.profile_photo %}
+                        <img src="{{ url_for('static', filename='uploads/profile_photos/' + current_user.profile_photo) }}"
+                            style="width:100%;height:100%;object-fit:cover;" />
+                        {% else %}
+                        <img src="{{ url_for('static', filename='images/default_avatar.png') }}"
+                            style="width:100%;height:100%;object-fit:cover;" />
+                        {% endif %}
+                    </span>
                     {% endif %}
                 </span>
                 {{ current_user.full_name.split()[0] }}
             </a>
-
             <a href="{{ url_for('auth.logout') }}" class="btn-ss btn-ss-outline btn-ss-sm">Log out</a>
             {% else %}
             <a href="{{ url_for('auth.login') }}" class="btn-ss btn-ss-outline">Log In</a>
             <a href="{{ url_for('auth.register') }}" class="btn-ss btn-ss-primary">Sign Up</a>
             {% endif %}
         </div>
-
-
     </nav>
-
 
     <div class="flash-container" style="position:fixed ;width:100% ; padding:0 32px;margin-top:12px;">
         {% with messages = get_flashed_messages(with_categories=true) %}
@@ -65,9 +83,7 @@
         {% endwith %}
     </div>
 
-
     {% block content %}{% endblock %}
-
 
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
     {% block scripts %}{% endblock %}

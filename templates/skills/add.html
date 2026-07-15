@@ -1,0 +1,283 @@
+{% extends 'base.html' %}
+{% block title %}Add Skill — SkillSwap{% endblock %}
+{% block content %}
+<div class="ss-page">
+  <a href="{{ url_for('skills.my_skills') }}" class="ss-back"><i class="ti ti-arrow-left"></i> Back to my skills</a>
+  <h1 class="ss-page-title">Add a new skill</h1>
+  <p class="ss-page-sub" style="margin-bottom:28px;">Tell students what you can teach them. The more detail you provide, the more requests you'll receive.</p>
+
+  <div style="display:grid;grid-template-columns:1fr 300px;gap:24px;align-items:start;">
+    <form method="POST" id="skill-form">
+
+      <!-- Basic info -->
+      <div class="ss-card" style="margin-bottom:16px;">
+        <p class="ss-section-title">BASIC INFO</p>
+        <div class="ss-input-group">
+          <label class="ss-label">Skill title *</label>
+          <input type="text" name="title" id="f-title" class="ss-input" maxlength="80" required placeholder="e.g. Python & machine learning basics" oninput="updatePreview();document.getElementById('tc').textContent=this.value.length+' / 80'"/>
+          <div class="ss-form-hint" style="text-align:right;" id="tc">0 / 80</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div class="ss-input-group">
+            <label class="ss-label">Category *</label>
+            <select name="category_id" class="ss-select" required onchange="updatePreview()">
+              <option value="">Select a category</option>
+              {% for cat in categories %}<option value="{{ cat.id }}">{{ cat.name }}</option>{% endfor %}
+            </select>
+          </div>
+          <div class="ss-input-group">
+            <label class="ss-label">Skill level you can teach *</label>
+            <select name="level_sel" class="ss-select" onchange="syncLevel(this.value)">
+              <option value="">Select level</option>
+              <option>Beginner</option><option>Intermediate</option><option>Advanced</option>
+            </select>
+          </div>
+        </div>
+        <div class="ss-input-group">
+          <label class="ss-label">Short description * <span style="color:var(--text-light);font-weight:400;">— what students will learn in 1–2 sentences</span></label>
+          <textarea name="short_desc" id="f-short" class="ss-textarea" rows="2" maxlength="160" required
+            placeholder="e.g. Learn Python from basics to building ML models using scikit-learn and pandas."
+            oninput="updatePreview();document.getElementById('sc').textContent=this.value.length+' / 160'"></textarea>
+          <div class="ss-form-hint" style="text-align:right;" id="sc">0 / 160</div>
+        </div>
+        <div class="ss-input-group" style="margin-bottom:0;">
+          <label class="ss-label">Full description * <span style="color:var(--text-light);font-weight:400;">— details about the sessions, your experience, what to expect</span></label>
+          <textarea name="description" class="ss-textarea" rows="4" maxlength="800" required
+            placeholder="Describe your experience with this skill, how you'll structure sessions, any prerequisites..."
+            oninput="document.getElementById('dc').textContent=this.value.length+' / 800'"></textarea>
+          <div class="ss-form-hint" style="text-align:right;" id="dc">0 / 800</div>
+        </div>
+      </div>
+
+      <!-- Topics -->
+      <div class="ss-card" style="margin-bottom:16px;">
+        <p class="ss-section-title">TOPICS COVERED</p>
+        <p style="font-size:13px;color:var(--text-mid);margin:0 0 10px;">Add specific topics students can search for. Press Enter or click Add.</p>
+        <div style="display:flex;gap:8px;margin-bottom:10px;">
+          <input type="text" id="topic-input" class="ss-input" placeholder="e.g. pandas, scikit-learn, data cleaning..." style="flex:1;" onkeydown="if(event.key==='Enter'){event.preventDefault();addTopic()}" maxlength="30"/>
+          <button type="button" class="btn-ss btn-ss-outline" onclick="addTopic()"><i class="ti ti-download" style="margin-right:4px;"></i>Add</button>
+        </div>
+        <div class="topic-pill-wrap" id="topics-wrap"></div>
+        <input type="hidden" name="topics" id="topics-hidden" value="[]"/>
+      </div>
+
+      <!-- Outcomes -->
+      <div class="ss-card" style="margin-bottom:16px;">
+        <p class="ss-section-title">WHAT STUDENTS WILL LEARN</p>
+        <p style="font-size:13px;color:var(--text-mid);margin:0 0 12px;">List 3–5 clear outcomes — what will students be able to do after your session?</p>
+        <div id="outcomes-list">
+          <div class="outcome-row">
+            <i class="ti ti-circle-check" style="color:var(--success);font-size:16px;flex-shrink:0;"></i>
+            <input type="text" name="outcomes" class="ss-input" placeholder="e.g. Build and train a classification model"/>
+            <button type="button" class="btn-ss btn-ss-ghost btn-ss-sm" onclick="removeOutcome(this)"><i class="ti ti-x"></i></button>
+          </div>
+          <div class="outcome-row">
+            <i class="ti ti-circle-check" style="color:var(--success);font-size:16px;flex-shrink:0;"></i>
+            <input type="text" name="outcomes" class="ss-input" placeholder="e.g. Evaluate models with accuracy and F1 score"/>
+            <button type="button" class="btn-ss btn-ss-ghost btn-ss-sm" onclick="removeOutcome(this)"><i class="ti ti-x"></i></button>
+          </div>
+        </div>
+        <button type="button" class="btn-ss btn-ss-ghost btn-ss-sm" onclick="addOutcome()" style="color:var(--primary);padding-left:0;margin-top:4px;">
+          <i class="ti ti-plus"></i> Add outcome
+        </button>
+      </div>
+
+      <!-- Session details -->
+      <div class="ss-card" style="margin-bottom:16px;">
+        <p class="ss-section-title">SESSION DETAILS</p>
+        <div class="ss-input-group">
+          <label class="ss-label">Skill level taught</label>
+          <div class="level-grid" id="level-grid">
+            <div class="level-card active" onclick="selectLevel('Beginner',this)"><p>Beginner</p><span>No prior knowledge</span></div>
+            <div class="level-card" onclick="selectLevel('Intermediate',this)"><p>Intermediate</p><span>Some basics needed</span></div>
+            <div class="level-card" onclick="selectLevel('Advanced',this)"><p>Advanced</p><span>Strong foundation</span></div>
+          </div>
+          <input type="hidden" name="level" id="level-val" value="Beginner"/>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;">
+          <div class="ss-input-group" style="margin-bottom:0;">
+            <label class="ss-label">Session duration</label>
+            <select name="session_duration" class="ss-select">
+              <option>30 minutes</option>
+              <option selected>45–60 minutes</option>
+              <option>90 minutes</option>
+              <option>Flexible</option>
+            </select>
+          </div>
+          <div class="ss-input-group" style="margin-bottom:0;">
+            <label class="ss-label">Session format</label>
+            <select name="session_format" class="ss-select">
+              <option>Online</option><option>In person</option><option selected>Both</option>
+            </select>
+          </div>
+        </div>
+        <div class="ss-input-group" style="margin-top:12px;">
+          <label class="ss-label">Availability</label>
+          <div class="avail-wrap" id="avail-wrap">
+            {% for slot in ['Weekday mornings','Weekday afternoons','Weekday evenings','Weekends'] %}
+            <div class="avail-chip {% if loop.index in [1,3,4] %}active{% endif %}" onclick="toggleAvail(this)" data-val="{{ slot }}">
+              <i class="ti ti-{% if 'morning' in slot %}sun{% elif 'afternoon' in slot %}coffee{% elif 'evening' in slot %}moon{% else %}calendar-week{% endif %}"></i>
+              {{ slot }}
+            </div>
+            {% endfor %}
+          </div>
+          <input type="hidden" name="availability_json" id="avail-hidden"/>
+        </div>
+        <div class="ss-input-group" style="margin-bottom:0;">
+          <label class="ss-label">Max students at a time <span style="color:var(--text-light);font-weight:400;">(optional)</span></label>
+          <select name="max_students" class="ss-select">
+            <option value="1" selected>1 student (1-on-1 only)</option>
+            <option value="2">Up to 2 students</option>
+            <option value="3">Up to 3 students</option>
+            <option value="99">No limit</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Publish status -->
+      <div class="ss-card" style="margin-bottom:24px;">
+        <p class="ss-section-title">PUBLISH STATUS</p>
+        <div class="publish-grid">
+          <div class="publish-card" id="pb-draft" onclick="setStatus('draft')">
+            <i class="ti ti-file"></i>
+            <p>Save as draft</p>
+          </div>
+          <div class="publish-card active" id="pb-active" onclick="setStatus('active')">
+            <i class="ti ti-eye"></i>
+            <p>Publish now</p>
+          </div>
+        </div>
+        <p style="font-size:12px;color:var(--text-light);margin:8px 0 0;">Draft skills are hidden from the marketplace. You can publish anytime from My skills.</p>
+        <input type="hidden" name="status" id="status-val" value="active"/>
+      </div>
+
+      <div style="display:flex;gap:10px;justify-content:flex-end;">
+        <a href="{{ url_for('skills.my_skills') }}" class="btn-ss btn-ss-outline">Cancel</a>
+        <button type="submit" class="btn-ss btn-ss-primary"><i class="ti ti-check"></i> Publish skill</button>
+      </div>
+    </form>
+
+    <!-- Live preview -->
+    <div class="ss-card" style="position:sticky;top:80px;">
+      <p class="ss-section-title">LIVE PREVIEW</p>
+      <span class="ss-badge ss-badge-gray" id="prev-badge">No category</span>
+      <p style="font-size:15px;font-weight:600;color:var(--text-light);margin:10px 0 6px;" id="prev-title">Your skill title</p>
+      <p style="font-size:13px;color:var(--text-light);margin:0 0 12px;" id="prev-desc">Short description will appear here...</p>
+      <hr class="ss-divider"/>
+      <div style="font-size:12px;color:var(--text-mid);display:flex;align-items:center;gap:6px;margin-bottom:6px;">
+        <i class="ti ti-user"></i> {{ current_user.full_name }} · {{ current_user.department }}, Year {{ current_user.year_of_study }}
+      </div>
+      <div style="font-size:12px;color:var(--text-mid);display:flex;align-items:center;gap:6px;margin-bottom:6px;">
+        <i class="ti ti-star" style="color:#F59E0B;"></i> New skill
+      </div>
+      <div style="font-size:12px;color:var(--text-mid);display:flex;align-items:center;gap:6px;margin-bottom:10px;" id="prev-level">
+        <i class="ti ti-chart-bar"></i> Beginner level
+      </div>
+      <div class="topic-pill-wrap" id="prev-topics"></div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+let topics=[], currentStatus='active';
+const catColors={
+  'Programming':['#EEF2FF','#4338CA'],
+  'Design':['#ECFDF5','#065F46'],
+  'Languages':['#FFF7ED','#9A3412'],
+  'Data & Analytics':['#EFF6FF','#1E40AF'],
+  'Music':['#FDF4FF','#6B21A8'],
+  'Photography':['#FFF1F2','#9F1239'],
+  'Mathematics':['#F0FDF4','#14532D'],
+  'Writing':['#F8FAFC','#334155'],
+  'Other':['#F8FAFC','#334155']
+};
+function updatePreview(){
+  const title=document.getElementById('f-title').value.trim();
+  const short=document.getElementById('f-short').value.trim();
+  const sel=document.querySelector('select[name="category_id"]');
+  const catName=sel.options[sel.selectedIndex]?.text||'';
+  const pt=document.getElementById('prev-title');
+  const pd=document.getElementById('prev-desc');
+  const pb=document.getElementById('prev-badge');
+  pt.textContent=title||'Your skill title';
+  pt.style.color=title?'var(--text-dark)':'var(--text-light)';
+  pd.textContent=short||'Short description will appear here...';
+  pd.style.color=short?'var(--text-mid)':'var(--text-light)';
+  if(catColors[catName]){
+    pb.textContent=catName;
+    pb.style.background=catColors[catName][0];
+    pb.style.color=catColors[catName][1];
+  } else {
+    pb.textContent='No category';
+    pb.style.background='#F1F5F9';
+    pb.style.color='#475569';
+  }
+}
+function addTopic(){
+  const inp=document.getElementById('topic-input');
+  const v=inp.value.trim();
+  if(!v||topics.includes(v)||topics.length>=10) return;
+  topics.push(v); inp.value=''; renderTopics();
+}
+function removeTopic(t){ topics=topics.filter(x=>x!==t); renderTopics(); }
+function renderTopics(){
+  const w=document.getElementById('topics-wrap');
+  w.innerHTML=topics.map(t=>`<span class="topic-pill">${t}<button type="button" onclick="removeTopic('${t}')"><i class="ti ti-x"></i></button></span>`).join('');
+  const pw=document.getElementById('prev-topics');
+  pw.innerHTML=topics.slice(0,5).map(t=>`<span class="topic-pill">${t}</span>`).join('');
+  document.getElementById('topics-hidden').value=JSON.stringify(topics);
+}
+function addOutcome(){
+  const l=document.getElementById('outcomes-list');
+  const d=document.createElement('div'); d.className='outcome-row';
+  d.innerHTML=`<i class="ti ti-circle-check" style="color:var(--success);font-size:16px;flex-shrink:0;"></i><input type="text" name="outcomes" class="ss-input" placeholder="e.g. Another learning outcome"/><button type="button" class="btn-ss btn-ss-ghost btn-ss-sm" onclick="removeOutcome(this)"><i class="ti ti-x"></i></button>`;
+  l.appendChild(d);
+}
+function removeOutcome(btn){
+  const rows=document.querySelectorAll('#outcomes-list .outcome-row');
+  if(rows.length>1) btn.closest('.outcome-row').remove();
+}
+function selectLevel(level,el){
+  document.querySelectorAll('.level-card').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('level-val').value=level;
+  document.getElementById('prev-level').innerHTML=`<i class="ti ti-chart-bar"></i> ${level} level`;
+  document.querySelector('select[name="level_sel"]').value=level;
+}
+function syncLevel(val){
+  if(!val) return;
+  document.querySelectorAll('.level-card').forEach(c=>{
+    c.classList.toggle('active',c.querySelector('p').textContent===val);
+  });
+  document.getElementById('level-val').value=val;
+  document.getElementById('prev-level').innerHTML=`<i class="ti ti-chart-bar"></i> ${val} level`;
+}
+function toggleAvail(el){
+  el.classList.toggle('active');
+  updateAvailHidden();
+}
+function updateAvailHidden(){
+  const active=[...document.querySelectorAll('.avail-chip.active')].map(c=>c.dataset.val);
+  document.getElementById('avail-hidden').value=JSON.stringify(active);
+}
+function setStatus(s){
+  currentStatus=s;
+  document.getElementById('pb-draft').classList.toggle('active',s==='draft');
+  document.getElementById('pb-active').classList.toggle('active',s==='active');
+  document.getElementById('status-val').value=s;
+}
+// init avail
+updateAvailHidden();
+document.getElementById('skill-form').addEventListener('submit',function(){
+  updateAvailHidden();
+  // copy avail_json into real availability checkboxes
+  const vals=JSON.parse(document.getElementById('avail-hidden').value||'[]');
+  vals.forEach(v=>{
+    const inp=document.createElement('input');
+    inp.type='hidden'; inp.name='availability'; inp.value=v;
+    this.appendChild(inp);
+  });
+});
+</script>
+{% endblock %}

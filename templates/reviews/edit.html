@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% block title %}Edit Review — SkillSwap{% endblock %}
+{% block content %}
+<div class="ss-page" style="max-width:540px;">
+  <a href="{{ url_for('reviews.index') }}" class="ss-back"><i class="ti ti-arrow-left"></i> Back</a>
+  <div class="ss-card" style="padding:32px;">
+    <h2 style="font-size:22px;font-weight:700;margin:0 0 28px;">Edit your review</h2>
+    <form method="POST">
+      <div class="ss-input-group">
+        <label class="ss-label">Rating *</label>
+        <div class="star-pick" id="star-row">
+          {% for i in range(1,6) %}
+          <button type="button" data-val="{{ i }}" onclick="setRating({{ i }})" class="{% if i <= review.rating %}on{% endif %}">★</button>
+          {% endfor %}
+        </div>
+        <input type="hidden" name="rating" id="rating-val" value="{{ review.rating }}"/>
+      </div>
+      <div class="ss-input-group">
+        <label class="ss-label">Comment</label>
+        <textarea name="comment" class="ss-textarea" rows="4">{{ review.comment or '' }}</textarea>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;">
+        <a href="{{ url_for('reviews.index') }}" class="btn-ss btn-ss-outline">Cancel</a>
+        <button type="submit" class="btn-ss btn-ss-primary">Save changes</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+function setRating(val){
+  document.getElementById('rating-val').value=val;
+  document.querySelectorAll('.star-pick button').forEach((b,i)=>b.classList.toggle('on',i<val));
+}
+</script>
+{% endblock %}

@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% block title %}Reviews — SkillSwap{% endblock %}
+{% block content %}
+<div class="ss-page">
+  <h1 class="ss-page-title">Reviews & ratings</h1>
+  <p class="ss-page-sub" style="margin-bottom:28px;">Reviews you've received and given.</p>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
+    <div>
+      <h3 style="font-size:16px;font-weight:600;margin:0 0 16px;">Reviews received <span style="color:var(--text-light);font-weight:400;">({{ received|length }})</span></h3>
+      {% if received %}
+        {% for r in received %}
+        <div class="ss-card" style="margin-bottom:12px;">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+            <span class="ss-avatar ss-avatar-xs">{{ r.reviewer.full_name[:2].upper() }}</span>
+            <strong style="font-size:13px;">{{ r.reviewer.full_name }}</strong>
+            <span class="ss-stars" style="font-size:13px;">{{ '★'*r.rating }}{{ '☆'*(5-r.rating) }}</span>
+            <span style="font-size:12px;color:var(--text-light);margin-left:auto;">{{ r.created_at.strftime('%b %d, %Y') }}</span>
+          </div>
+          {% if r.comment %}<p style="font-size:13px;color:var(--text-mid);margin:0 0 8px;">"{{ r.comment }}"</p>{% endif %}
+          <p style="font-size:12px;color:var(--text-light);margin:0;"><i class="ti ti-tools" style="margin-right:4px;"></i>{{ r.request.skill.title }}</p>
+        </div>
+        {% endfor %}
+      {% else %}
+        <div class="ss-empty" style="padding:40px 20px;">
+          <div class="ss-empty-icon"><i class="ti ti-star" style="font-size:24px;color:var(--primary);"></i></div>
+          <p class="ss-empty-title" style="font-size:15px;">No reviews received yet</p>
+        </div>
+      {% endif %}
+    </div>
+    <div>
+      <h3 style="font-size:16px;font-weight:600;margin:0 0 16px;">Reviews given <span style="color:var(--text-light);font-weight:400;">({{ given|length }})</span></h3>
+      {% if given %}
+        {% for r in given %}
+        <div class="ss-card" style="margin-bottom:12px;">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+            <span class="ss-avatar ss-avatar-xs">{{ r.reviewee.full_name[:2].upper() }}</span>
+            <strong style="font-size:13px;">{{ r.reviewee.full_name }}</strong>
+            <span class="ss-stars" style="font-size:13px;">{{ '★'*r.rating }}{{ '☆'*(5-r.rating) }}</span>
+            <span style="font-size:12px;color:var(--text-light);margin-left:auto;">{{ r.created_at.strftime('%b %d, %Y') }}</span>
+          </div>
+          {% if r.comment %}<p style="font-size:13px;color:var(--text-mid);margin:0 0 10px;">"{{ r.comment }}"</p>{% endif %}
+          <p style="font-size:12px;color:var(--text-light);margin:0 0 10px;"><i class="ti ti-tools" style="margin-right:4px;"></i>{{ r.request.skill.title }}</p>
+          <div style="display:flex;gap:8px;">
+            <a href="{{ url_for('reviews.edit', review_id=r.id) }}" class="btn-ss btn-ss-outline btn-ss-sm">Edit</a>
+            <form method="POST" action="{{ url_for('reviews.delete', review_id=r.id) }}" onsubmit="return confirm('Delete this review?')" style="margin:0;">
+              <button class="btn-ss btn-ss-danger btn-ss-sm">Delete</button>
+            </form>
+          </div>
+        </div>
+        {% endfor %}
+      {% else %}
+        <div class="ss-empty" style="padding:40px 20px;">
+          <div class="ss-empty-icon"><i class="ti ti-edit" style="font-size:24px;color:var(--primary);"></i></div>
+          <p class="ss-empty-title" style="font-size:15px;">No reviews given yet</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

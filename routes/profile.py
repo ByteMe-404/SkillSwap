@@ -5,26 +5,20 @@ from werkzeug.utils import secure_filename
 from extensions import db
 from models.user import User
 
-
 profile_bp = Blueprint('profile', __name__)
 ALLOWED = {'png', 'jpg', 'jpeg'}
-
-
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED
 
+@profile_bp.route('/profile/<int:user_id>')
+def view(user_id):
+    user   = User.query.get_or_404(user_id)
+    skills = user.skills.filter_by(status='active').all()
+    return render_template('profile/view.html', user=user, skills=skills)
 
-@profile_bp.route('/profile')
+@profile_bp.route('/profile/edit', methods=['GET', 'POST'])
 @login_required
-def view():
-    return render_template('profile/view.html', user=current_user)
-
-
-
-@profile_bp.route('/profile/edit' , methods=['GET', 'POST'])
-@login_required
-
 def edit():
     if request.method == 'POST':
         current_user.full_name     = request.form.get('full_name', '').strip()
@@ -49,3 +43,11 @@ def edit():
         flash('Profile updated successfully.', 'success')
         return redirect(url_for('profile.view', user_id=current_user.id))
     return render_template('profile/edit.html')
+
+@profile_bp.route('/profile/delete', methods=['POST'])
+@login_required
+def delete():
+    db.session.delete(current_user)
+    db.session.commit()
+    flash('Your account has been deleted.', 'info')
+    return redirect(url_for('auth.home'))
